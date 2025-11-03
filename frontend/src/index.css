@@ -1,0 +1,150 @@
+/* infinite_diary/frontend/src/index.css */
+
+/* =======================================
+   🔑 1. CSS @import 구문은 반드시 최상단에 위치해야 합니다!
+   ======================================= */
+@import url('https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap');
+@import url('./pages/AuthPage.css'); 
+
+
+/* =======================================
+   2. 전역 및 기본 스타일
+   ======================================= */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Nanum Pen Script', cursive, system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+
+/* 🔑 '오른쪽 검은 여백' 문제 해결: 가로 스크롤을 확실히 숨깁니다. */
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden; 
+}
+
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: rgb(36, 36, 36);
+}
+
+a {
+  font-weight: 500;
+  color: rgb(100, 108, 255);
+  text-decoration: inherit;
+}
+a:hover {
+  color: rgb(83, 91, 242);
+}
+
+body {
+    margin: 0;
+    min-width: 320px;
+    min-height: 100vh;
+    background-color: rgb(26, 26, 26); 
+    color: rgb(240, 240, 240);
+}
+
+/* ... (h1, button 등 기존 스타일 유지) ... */
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: rgb(26, 26, 26);
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+button:hover {
+  border-color: rgb(100, 108, 255);
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: rgb(33, 53, 71);
+    background-color: rgb(255, 255, 255);
+  }
+  a:hover {
+    color: rgb(116, 123, 255);
+  }
+  button {
+    background-color: rgb(249, 249, 249);
+  }
+}
+
+/* =======================================
+   🔑 3. CalendarPage (기록된 우주) 스타일
+   ======================================= */
+.infinite-calendar {
+    width: 100%;
+    max-width: 100%;
+    background-color: transparent; 
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+    font-family: 'Nanum Pen Script', cursive; 
+    font-size: 1.4rem; 
+    line-height: 1.5; 
+}
+
+/* 🔑 최종 수정: 네비게이션 컨테이너 높이 대폭 확보 (텍스트 겹침 해결) */
+.infinite-calendar .react-calendar__navigation {
+    height: 120px; /* 🔑 120px로 높이를 더 확보하여 텍스트 겹침을 해결 */
+    margin-bottom: 10px; 
+}
+
+.infinite-calendar .react-calendar__navigation button {
+    color: rgb(255, 204, 0); 
+    font-size: 1.6rem; /* 🔑 1.8rem -> 1.6rem으로 폰트 미세 조정 */
+}
+
+/* 요일 글자 */
+.infinite-calendar .react-calendar__month-view__weekdays__weekday abbr {
+    text-decoration: none;
+    font-weight: bold;
+    color: rgb(170, 170, 170); 
+    font-size: 1.2rem;
+}
+
+/* 날짜 타일 */
+.infinite-calendar .react-calendar__tile {
+    padding: 10px 6px;
+    background: transparent;
+    color: rgb(240, 240, 240); 
+    border-radius: 5px;
+}
+
+/* 오늘 날짜 (Today) */
+.infinite-calendar .react-calendar__tile--now {
+    background-color: rgba(56, 56, 56, 0.5); 
+}
+
+/* 호버 효과 */
+.infinite-calendar .react-calendar__tile:hover {
+    background-color: rgba(68, 68, 68, 0.7); 
+}
+
+/* 선택된 날짜 (클릭 시) */
+.infinite-calendar .react-calendar__tile--range,
+.infinite-calendar .react-calendar__tile--active:enabled:focus {
+    background-color: rgb(0, 255, 204); 
+    color: rgb(26, 26, 26); 
+}
