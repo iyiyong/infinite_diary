@@ -8,6 +8,7 @@ const authRoutes = require('./routes/auth');
 const diaryRoutes = require('./routes/diaryRoutes');
 
 const app = express();
+app.set('trust proxy', 1);
 
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
