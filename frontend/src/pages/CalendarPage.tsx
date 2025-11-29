@@ -54,7 +54,14 @@ const CalendarPage: React.FC = () => {
     // 🔑 데이터 조회 함수 (안정성 강화)
     const fetchMonthlyDiary = useCallback(async (date: Date) => {
         const token = localStorage.getItem('diaryToken');
-        if (!token) return;
+        
+        // 🚨 [핵심 수정] 좀비 토큰(undefined 문자열) 감지 및 자동 삭제 🚨
+        if (!token || token === 'undefined' || token === 'null') {
+            console.warn("⛔ 잘못된 토큰 감지! 자동 삭제 후 로그아웃합니다.");
+            localStorage.removeItem('diaryToken'); // 나쁜 토큰 삭제
+            navigate('/'); // 로그인 화면으로 강제 이동
+            return;
+        }
 
         // 이전 요청 취소 (빠른 월 이동 시 중복 요청 방지)
         if (abortControllerRef.current) {
@@ -70,10 +77,10 @@ const CalendarPage: React.FC = () => {
             const response = await axios.get(
                 `${API_URL}/api/diary/month/${date.getFullYear()}/${date.getMonth() + 1}`,
                 {
-                    headers: { Authorization: `Bearer ${token}` }, // 🔑 헤더 인증 (이게 핵심!)
+                    headers: { Authorization: `Bearer ${token}` }, // 🔑 올바른 토큰만 전송
                     signal: newController.signal,
                     timeout: 60000, 
-                    withCredentials: false // 🚨 [수정됨] false로 변경하여 좀비 쿠키 전송 차단!
+                    withCredentials: false // 쿠키 미사용
                 }
             );
 
@@ -124,7 +131,9 @@ const CalendarPage: React.FC = () => {
     // 🔑 데이터 갱신 트리거 (페이지 진입 시 무조건 실행)
     useEffect(() => {
         const token = localStorage.getItem('diaryToken');
-        if (!token) {
+        // 초기 진입 시에도 나쁜 토큰 체크
+        if (!token || token === 'undefined' || token === 'null') {
+            localStorage.removeItem('diaryToken');
             navigate('/');
             return;
         }
