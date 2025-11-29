@@ -34,9 +34,9 @@ const AuthPage: React.FC = () => {
         setIsLoading(true); 
 
         try {
-            // 🚨 [핵심 수정 1] 쿠키를 확실하게 주고받기 위한 설정 객체
+            // 🚨 쿠키/헤더 설정
             const axiosConfig = {
-                withCredentials: true, // 배포 환경에서 필수! (쿠키 허용)
+                withCredentials: true, 
                 headers: { 'Content-Type': 'application/json' }
             };
 
@@ -45,10 +45,10 @@ const AuthPage: React.FC = () => {
                 await axios.post(`/api/auth/register`, {
                     userId,
                     password,
-                    displayName: displayName || 'Diary Keeper', // 이름 없으면 기본값 설정
-                }, axiosConfig); // 👈 여기에 설정 추가
+                    displayName: displayName || 'Diary Keeper', 
+                }, axiosConfig);
 
-                setMessage('Sign Up Successful! Please Login.');
+                setMessage('가입 완료! 이제 로그인 해주세요.');
                 setIsLogin(true); 
                 setUserId('');
                 setPassword('');
@@ -59,20 +59,23 @@ const AuthPage: React.FC = () => {
                 const response = await axios.post(`/api/auth/login`, { 
                     userId, 
                     password 
-                }, axiosConfig); // 👈 🚨 여기에 설정 추가 (이게 없어서 안 된 겁니다!)
+                }, axiosConfig);
 
-                // 디버깅용 로그 (F12 콘솔에서 확인 가능)
                 console.log('Login Response:', response.data);
 
-                // 🚨 [핵심 수정 2] undefined 방지 로직
-                // 서버에서 이름이 안 오면 userId를 대신 사용
-                const finalDisplayName = response.data.displayName || response.data.userId || 'User';
+                // 🚨 [핵심 수정] 환영 메시지 로직 개선
+                let finalDisplayName = response.data.displayName || response.data.userId;
+                
+                // 만약 서버 데이터가 없거나 기본값이면, 입력한 아이디를 사용
+                if (!finalDisplayName || finalDisplayName === 'Diary Keeper') {
+                    finalDisplayName = userId;
+                }
 
                 const token = response.data.token;
-                // 로컬 스토리지에는 참고용으로만 저장 (실제 인증은 쿠키가 함)
                 localStorage.setItem('diaryToken', token); 
                 localStorage.setItem('username', finalDisplayName); 
 
+                // 🎉 이제 "Welcome back, 육성지!" 처럼 나옵니다.
                 setMessage(`Welcome back, ${finalDisplayName}!`);
                 
                 setTimeout(() => {
@@ -81,11 +84,11 @@ const AuthPage: React.FC = () => {
             }
 
         } catch (error: any) {
-            console.error("Auth Error:", error); // 에러 로그 출력
+            console.error("Auth Error:", error); 
             if (error.response) {
                 setMessage(`Error: ${error.response.data.message}`);
             } else {
-                setMessage('Unknown Error. Please check server status.');
+                setMessage('서버 연결에 실패했습니다.');
             }
         } finally {
             setIsLoading(false);
@@ -135,27 +138,27 @@ const AuthPage: React.FC = () => {
                             {!isLogin && (
                                 <input
                                     type="text"
-                                    placeholder="Nickname (Optional)"
+                                    placeholder="닉네임 (선택사항)"
                                     value={displayName}
                                     onChange={(e) => setDisplayName(e.target.value)}
                                 />
                             )}
                             <input
                                 type="text" 
-                                placeholder="User ID" 
+                                placeholder="아이디" 
                                 value={userId} 
                                 onChange={(e) => setUserId(e.target.value)} 
                                 required
                             />
                             <input
                                 type="password"
-                                placeholder="Password"
+                                placeholder="비밀번호"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
                             />
                             <button type="submit" disabled={isLoading}>
-                                {isLoading ? 'Processing...' : (isLogin ? 'Login' : 'Sign Up')}
+                                {isLoading ? '처리 중...' : (isLogin ? '로그인' : '회원가입')}
                             </button>
                         </form>
                         
@@ -196,6 +199,9 @@ const AuthPage: React.FC = () => {
                     padding: 20px;
                     display: flex;
                     justify-content: center;
+                    /* 모바일 스크롤 고려 */
+                    height: 100%;
+                    overflow-y: auto;
                 }
 
                 .auth-card {
@@ -209,6 +215,8 @@ const AuthPage: React.FC = () => {
                     overflow: hidden;
                     max-width: 1100px;
                     width: 100%;
+                    /* PC 애니메이션 */
+                    animation: fadeIn 0.8s ease-out;
                 }
 
                 .guide-section {
@@ -293,12 +301,14 @@ const AuthPage: React.FC = () => {
                     background: rgba(255, 255, 255, 0.08);
                     color: white;
                     font-size: 1.1rem;
+                    transition: all 0.3s;
                 }
 
                 .form-section input:focus {
                     outline: none;
                     border-color: #00BFFF;
-                    box-shadow: 0 0 10px rgba(0, 191, 255, 0.3);
+                    box-shadow: 0 0 15px rgba(0, 191, 255, 0.4);
+                    background: rgba(255, 255, 255, 0.15);
                 }
 
                 .form-section button[type="submit"] {
@@ -346,22 +356,33 @@ const AuthPage: React.FC = () => {
                 .success { background: rgba(0, 255, 204, 0.15); color: #00ffcc; }
                 .error { background: rgba(255, 69, 0, 0.15); color: #ff4500; }
 
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translateY(20px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+
+                /* 📱 모바일 반응형 스타일 (Mobile) */
                 @media (max-width: 768px) {
                     .auth-page-wrapper {
                         align-items: flex-start;
                         height: auto;
-                        overflow-y: auto;
+                        min-height: 100vh;
+                        background-color: rgb(10, 10, 20); /* 배경색 강제 적용 (캔버스 로드 전 깜빡임 방지) */
                     }
 
                     .auth-content-container {
                         padding: 15px;
-                        margin-top: 20px;
-                        margin-bottom: 40px;
+                        margin-top: 0; /* 모바일에서 위쪽 여백 제거 */
+                        margin-bottom: 20px;
+                        align-items: center; /* 중앙 정렬 */
                     }
 
                     .auth-card {
                         flex-direction: column;
                         max-width: 100%;
+                        margin-top: 20px;
+                        margin-bottom: 40px; /* 하단 여백 확보 */
+                        border-radius: 15px; /* 모바일에서 둥글기 살짝 조정 */
                     }
 
                     .guide-section {
@@ -372,22 +393,46 @@ const AuthPage: React.FC = () => {
                     }
 
                     .neon-blue-title {
-                        font-size: 2.5rem;
+                        font-size: 2.2rem; /* 제목 크기 줄임 */
+                        margin-bottom: 15px;
                     }
                     
+                    .guide-section h2 {
+                        font-size: 1.4rem;
+                        margin-bottom: 20px;
+                    }
+
                     .guide-section ul {
                         text-align: left;
                         display: inline-block;
                         padding-left: 0;
                         list-style-position: inside;
+                        margin-bottom: 20px;
                     }
                     
                     .guide-section li {
-                        font-size: 1.1rem;
+                        font-size: 1rem; /* 리스트 폰트 줄임 */
+                        margin-bottom: 8px;
                     }
 
                     .form-section {
-                        padding: 40px 20px;
+                        padding: 30px 20px; /* 패딩 축소 */
+                        min-width: auto; /* 최소 너비 해제 */
+                    }
+
+                    .form-section h3 {
+                        font-size: 2rem; /* 로그인 제목 줄임 */
+                        margin-bottom: 25px;
+                    }
+
+                    .form-section input {
+                        padding: 15px; /* 입력창 높이 조정 */
+                        font-size: 1rem;
+                    }
+
+                    .form-section button[type="submit"] {
+                        padding: 15px; /* 버튼 높이 조정 */
+                        font-size: 1.1rem;
                     }
                 }
             `}</style>

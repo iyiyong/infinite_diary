@@ -54,14 +54,7 @@ const CalendarPage: React.FC = () => {
     // 🔑 데이터 조회 함수 (안정성 강화)
     const fetchMonthlyDiary = useCallback(async (date: Date) => {
         const token = localStorage.getItem('diaryToken');
-        
-        // 🔍 디버깅: 토큰이 제대로 있는지 콘솔에 출력
-        // console.log("Current Token in LocalStorage:", token);
-
-        if (!token) {
-            console.warn("No token found, redirecting to login.");
-            return;
-        }
+        if (!token) return;
 
         // 이전 요청 취소 (빠른 월 이동 시 중복 요청 방지)
         if (abortControllerRef.current) {
