@@ -1,0 +1,130 @@
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 90%;
+    max-width: 1200px;
+    padding: 40px 20px;
+    min-height: 80vh;
+    margin: 0 auto;
+}
+
+/* ---------------------------------
+   데스노트 감성 배경 (사용법) 스타일
+   --------------------------------- */
+.usage-guide {
+    flex: 1;
+    margin-right: 50px;
+    padding: 20px;
+    max-width: 500px;
+    text-align: left;
+    /* 텍스트가 희미하게 빛나는 느낌 */
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.4); 
+}
+
+.usage-guide h1 {
+    font-size: 3.5rem;
+    color: #ffcc00; /* 황금색 강조 */
+    margin-bottom: 10px;
+}
+
+.usage-guide h2 {
+    font-size: 1.8rem;
+    margin-bottom: 30px;
+    color: #aaa;
+}
+
+.usage-guide ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.usage-guide li {
+    font-size: 1.2rem;
+    line-height: 1.8;
+    margin-bottom: 10px;
+    border-left: 3px solid #ffcc00; /* 데스노트처럼 강조 라인 */
+    padding-left: 15px;
+}
+
+.floating-tag {
+    font-size: 1.5rem;
+    color: #00ffcc;
+    margin-top: 20px;
+}
+
+
+/* ---------------------------------
+   인증 폼 스타일
+   --------------------------------- */
+.auth-form-box {
+    background: rgba(0, 0, 0, 0.6);
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    width: 350px;
+}
+
+.auth-form-box h3 {
+    text-align: center;
+    margin-bottom: 25px;
+    font-size: 2rem;
+}
+
+.auth-form-box input, .auth-form-box button {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 15px;
+    border: 1px solid #555;
+    border-radius: 5px;
+    background-color: #333;
+    color: #f0f0f0;
+    font-size: 1.1rem;
+    outline: none;
+}
+
+.auth-form-box button[type="submit"] {
+    background-color: #ffcc00;
+    color: #1a1a1a;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.auth-form-box button[type="submit"]:hover {
+    background-color: #ffdd44;
+}
+
+.toggle-button {
+    background: none;
+    color: #aaa;
+    border: none;
+    cursor: pointer;
+    text-align: center;
+    padding: 10px 0;
+    font-size: 1rem;
+}
+
+/* ---------------------------------
+   메시지 스타일 (API 통신 결과)
+   --------------------------------- */
+.message {
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    text-align: center;
+    font-size: 1rem;
+    font-weight: bold;
+    /* 손글씨 느낌에 맞게 조정 */
+    font-family: 'Nanum Pen Script', cursive, sans-serif !important; 
+}
+
+.success-message {
+    background-color: #38761d; /* 녹색 계열 */
+    color: #f0f0f0;
+}
+
+.error-message {
+    background-color: #cc0000; /* 붉은색 계열 */
+    color: #f0f0f0;
+}

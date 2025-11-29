@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    
+    // 모듈 해결 오류 해결을 위한 핵심 설정
+    "moduleResolution": "bundler",
+    "esModuleInterop": true, 
+    "allowSyntheticDefaultImports": true, 
+    "allowImportingTsExtensions": true, 
+    
+    "strict": true,
+    "jsx": "react-jsx",
+    "skipLibCheck": true,
+    
+    "noEmit": true,
+    "resolveJsonModule": true,
+    
+    "baseUrl": "./",
+    "paths": {
+      // 별칭을 설정하여 상대 경로 오류를 방지 (옵션)
+      "@/*": ["./src/*"] 
+    }
+  },
+  "include": ["src"]
+  // 🚨 references: [ ... ] 배열을 완전히 제거했습니다.
+}
