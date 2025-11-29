@@ -54,7 +54,14 @@ const CalendarPage: React.FC = () => {
     // 🔑 데이터 조회 함수 (안정성 강화)
     const fetchMonthlyDiary = useCallback(async (date: Date) => {
         const token = localStorage.getItem('diaryToken');
-        if (!token) return;
+        
+        // 🔍 디버깅: 토큰이 제대로 있는지 콘솔에 출력
+        // console.log("Current Token in LocalStorage:", token);
+
+        if (!token) {
+            console.warn("No token found, redirecting to login.");
+            return;
+        }
 
         // 이전 요청 취소 (빠른 월 이동 시 중복 요청 방지)
         if (abortControllerRef.current) {
@@ -67,16 +74,13 @@ const CalendarPage: React.FC = () => {
         setError(null);
 
         try {
-            // 🔑 요청 URL 확인용 로그
-            // console.log(`[API Request] ${API_URL}/api/diary/month/${date.getFullYear()}/${date.getMonth() + 1}`);
-
             const response = await axios.get(
                 `${API_URL}/api/diary/month/${date.getFullYear()}/${date.getMonth() + 1}`,
                 {
-                    headers: { Authorization: `Bearer ${token}` },
+                    headers: { Authorization: `Bearer ${token}` }, // 🔑 헤더 인증 (이게 핵심!)
                     signal: newController.signal,
-                    timeout: 60000, // 60초 대기 (무료 서버 슬립 모드 대응)
-                    withCredentials: true // 🚨 [필수 추가] 인증 정보(쿠키) 포함 설정
+                    timeout: 60000, 
+                    withCredentials: false // 🚨 [수정됨] false로 변경하여 좀비 쿠키 전송 차단!
                 }
             );
 
@@ -107,7 +111,9 @@ const CalendarPage: React.FC = () => {
                 if (err.response) {
                     if (err.response.status === 401) {
                         setError('세션이 만료되었습니다. 다시 로그인해주세요.');
-                        setTimeout(() => navigate('/auth'), 2000);
+                        // 401 발생 시 토큰 삭제 후 로그인 페이지로 이동
+                        localStorage.removeItem('diaryToken');
+                        setTimeout(() => navigate('/'), 2000);
                     } else {
                         setError(`서버 오류: ${err.response.data?.message || '데이터를 불러올 수 없습니다.'}`);
                     }
@@ -126,7 +132,7 @@ const CalendarPage: React.FC = () => {
     useEffect(() => {
         const token = localStorage.getItem('diaryToken');
         if (!token) {
-            navigate('/auth');
+            navigate('/');
             return;
         }
         fetchMonthlyDiary(viewDate);
