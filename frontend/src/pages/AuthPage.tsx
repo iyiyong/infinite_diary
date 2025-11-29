@@ -34,13 +34,19 @@ const AuthPage: React.FC = () => {
         setIsLoading(true); 
 
         try {
+            // 🚨 [핵심 수정 1] 쿠키를 확실하게 주고받기 위한 설정 객체
+            const axiosConfig = {
+                withCredentials: true, // 배포 환경에서 필수! (쿠키 허용)
+                headers: { 'Content-Type': 'application/json' }
+            };
+
             if (!isLogin) {
                 // 회원가입
                 await axios.post(`/api/auth/register`, {
                     userId,
                     password,
-                    displayName: displayName || undefined, 
-                });
+                    displayName: displayName || 'Diary Keeper', // 이름 없으면 기본값 설정
+                }, axiosConfig); // 👈 여기에 설정 추가
 
                 setMessage('Sign Up Successful! Please Login.');
                 setIsLogin(true); 
@@ -50,13 +56,24 @@ const AuthPage: React.FC = () => {
 
             } else {
                 // 로그인
-                const response = await axios.post(`/api/auth/login`, { userId, password });
+                const response = await axios.post(`/api/auth/login`, { 
+                    userId, 
+                    password 
+                }, axiosConfig); // 👈 🚨 여기에 설정 추가 (이게 없어서 안 된 겁니다!)
+
+                // 디버깅용 로그 (F12 콘솔에서 확인 가능)
+                console.log('Login Response:', response.data);
+
+                // 🚨 [핵심 수정 2] undefined 방지 로직
+                // 서버에서 이름이 안 오면 userId를 대신 사용
+                const finalDisplayName = response.data.displayName || response.data.userId || 'User';
 
                 const token = response.data.token;
+                // 로컬 스토리지에는 참고용으로만 저장 (실제 인증은 쿠키가 함)
                 localStorage.setItem('diaryToken', token); 
-                localStorage.setItem('username', response.data.displayName); 
+                localStorage.setItem('username', finalDisplayName); 
 
-                setMessage(`Welcome back, ${response.data.displayName}!`);
+                setMessage(`Welcome back, ${finalDisplayName}!`);
                 
                 setTimeout(() => {
                     navigate('/diary'); 
@@ -64,6 +81,7 @@ const AuthPage: React.FC = () => {
             }
 
         } catch (error: any) {
+            console.error("Auth Error:", error); // 에러 로그 출력
             if (error.response) {
                 setMessage(`Error: ${error.response.data.message}`);
             } else {
@@ -109,7 +127,6 @@ const AuthPage: React.FC = () => {
 
                     {/* 오른쪽: 로그인/회원가입 폼 */}
                     <div className="form-section">
-                        {/* 🔑 "로그인" -> "Login", "회원가입" -> "Sign Up"으로 변경 */}
                         <h3>{isLogin ? 'Login' : 'Sign Up'}</h3>
 
                         {message && <p className={`message ${message.includes('Error') || message.includes('실패') ? 'error' : 'success'}`}>{message}</p>} 
@@ -158,7 +175,7 @@ const AuthPage: React.FC = () => {
                 </div>
             </div>
 
-            {/* CSS 스타일 (디자인 개선) */}
+            {/* CSS 스타일 */}
             <style>{`
                 .auth-page-wrapper {
                     position: relative;
@@ -184,18 +201,18 @@ const AuthPage: React.FC = () => {
                 .auth-card {
                     display: flex;
                     flex-direction: row;
-                    background: rgba(10, 10, 20, 0.85); /* 배경을 좀 더 어둡게 */
+                    background: rgba(10, 10, 20, 0.85);
                     backdrop-filter: blur(12px);
                     border-radius: 20px;
-                    border: 1px solid rgba(0, 100, 255, 0.3); /* 테두리도 파란빛 */
+                    border: 1px solid rgba(0, 100, 255, 0.3);
                     box-shadow: 0 0 50px rgba(0, 0, 0, 0.7);
                     overflow: hidden;
-                    max-width: 1100px; /* 카드 너비 확장 */
+                    max-width: 1100px;
                     width: 100%;
                 }
 
                 .guide-section {
-                    flex: 1.2; /* 가이드 섹션을 조금 더 넓게 */
+                    flex: 1.2;
                     padding: 50px;
                     background: linear-gradient(135deg, rgba(0, 20, 50, 0.4) 0%, rgba(0, 0, 0, 0.4) 100%);
                     border-right: 1px solid rgba(255, 255, 255, 0.1);
@@ -204,15 +221,14 @@ const AuthPage: React.FC = () => {
                     justify-content: center;
                 }
 
-                /* 🔑 1. 찐한 빛나는 파랑 (Neon Blue) 제목 */
                 .neon-blue-title {
-                    font-size: 3.5rem; /* 글씨 크기 키움 */
+                    font-size: 3.5rem;
                     margin-bottom: 20px;
-                    color: #00BFFF; /* Deep Sky Blue */
+                    color: #00BFFF;
                     text-shadow: 
                         0 0 10px #00BFFF,
                         0 0 20px #00BFFF,
-                        0 0 40px #0000FF; /* 파란색 네온 효과 */
+                        0 0 40px #0000FF;
                     font-weight: 800;
                     letter-spacing: 2px;
                 }
@@ -232,14 +248,13 @@ const AuthPage: React.FC = () => {
                 .guide-section li {
                     margin-bottom: 12px;
                     line-height: 1.7;
-                    font-size: 1.2rem; /* 본문 글씨 크기 키움 */
+                    font-size: 1.2rem;
                     color: #f0f0f0;
                     font-weight: 500;
                 }
 
-                /* 🔑 2. 노란색으로 빛나는 태그 */
                 .neon-yellow-text {
-                    color: #FFD700; /* Gold */
+                    color: #FFD700;
                     font-style: italic;
                     font-size: 1.1rem;
                     font-weight: bold;
@@ -257,7 +272,7 @@ const AuthPage: React.FC = () => {
                 }
 
                 .form-section h3 {
-                    font-size: 2.5rem; /* 로그인 제목 크기 키움 */
+                    font-size: 2.5rem;
                     margin-bottom: 35px;
                     color: white;
                     text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
@@ -272,7 +287,7 @@ const AuthPage: React.FC = () => {
                 }
 
                 .form-section input {
-                    padding: 18px; /* 입력창 크기 키움 */
+                    padding: 18px;
                     border-radius: 10px;
                     border: 1px solid #555;
                     background: rgba(255, 255, 255, 0.08);
@@ -282,7 +297,7 @@ const AuthPage: React.FC = () => {
 
                 .form-section input:focus {
                     outline: none;
-                    border-color: #00BFFF; /* 포커스 시 파란색 */
+                    border-color: #00BFFF;
                     box-shadow: 0 0 10px rgba(0, 191, 255, 0.3);
                 }
 
@@ -290,7 +305,6 @@ const AuthPage: React.FC = () => {
                     padding: 18px;
                     border-radius: 10px;
                     border: none;
-                    /* 버튼도 파란색 계열로 변경하여 통일감 */
                     background: linear-gradient(45deg, #00BFFF, #1E90FF);
                     color: white;
                     font-weight: bold;
@@ -332,7 +346,6 @@ const AuthPage: React.FC = () => {
                 .success { background: rgba(0, 255, 204, 0.15); color: #00ffcc; }
                 .error { background: rgba(255, 69, 0, 0.15); color: #ff4500; }
 
-                /* 📱 모바일 반응형 스타일 (Mobile) */
                 @media (max-width: 768px) {
                     .auth-page-wrapper {
                         align-items: flex-start;
@@ -359,13 +372,13 @@ const AuthPage: React.FC = () => {
                     }
 
                     .neon-blue-title {
-                        font-size: 2.5rem; /* 모바일에서 제목 크기 조정 */
+                        font-size: 2.5rem;
                     }
                     
                     .guide-section ul {
                         text-align: left;
                         display: inline-block;
-                        padding-left: 0; /* 모바일에서 들여쓰기 제거 */
+                        padding-left: 0;
                         list-style-position: inside;
                     }
                     
