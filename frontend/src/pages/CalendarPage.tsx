@@ -73,9 +73,10 @@ const CalendarPage: React.FC = () => {
             const response = await axios.get(
                 `${API_URL}/api/diary/month/${date.getFullYear()}/${date.getMonth() + 1}`,
                 {
-                    headers: { Authorization: `Bearer ${token}` },
+                    headers: { Authorization: `Bearer ${token}` }, // 헤더 인증 (Render 이슈 해결 핵심 1)
                     signal: newController.signal,
-                    timeout: 60000 // 60초 대기 (무료 서버 슬립 모드 대응)
+                    timeout: 60000, // 60초 대기 (무료 서버 슬립 모드 대응)
+                    withCredentials: true // 🚨 [추가됨] 쿠키 인증 (Render 이슈 해결 핵심 2)
                 }
             );
 
@@ -187,10 +188,12 @@ const CalendarPage: React.FC = () => {
     return (
         <div className="calendar-page-wrapper">
             {/* 3D 배경 */}
-            <Canvas camera={{ position: [0, 0, 1] }} className="background-canvas">
-                <StarsBackground />
-                <ambientLight intensity={0.5} />
-            </Canvas>
+            <div className="background-canvas">
+                <Canvas camera={{ position: [0, 0, 1] }}>
+                    <StarsBackground />
+                    <ambientLight intensity={0.5} />
+                </Canvas>
+            </div>
 
             <div className="calendar-content-container">
                 <div className="calendar-card">
