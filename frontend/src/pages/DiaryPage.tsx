@@ -6,7 +6,7 @@ import moment from 'moment'; // 🔑 moment 임포트
 
 // 🔑 절대 경로 임포트
 import EmotionSelector from '@/components/EmotionSelector';
-import { EmotionOption, emotionOptions } from '@/constants/emotions.ts'; 
+import { EmotionOption } from '@/constants/emotions.ts'; 
 
 // 3D 컴포넌트 임포트
 import StarsBackground from '@/components/StarsBackground';
@@ -109,13 +109,18 @@ const DiaryPage: React.FC = () => {
             // 🔑 날짜 수정: 'YYYY-MM-DD' 형식으로 전송하여 덮어쓰기 보장
             const todayDate = moment().format('YYYY-MM-DD');
 
+            // 🚨 [핵심 수정] 헤더(Token)와 쿠키(Credentials) 동시 전송
             await axios.post(`/api/diary`, {
                 content: diaryContent,
                 emotion: selectedEmotion.emotionKey, 
                 weather, 
                 date: todayDate 
             }, {
-                headers: { Authorization: `Bearer ${token}` },
+                headers: { 
+                    Authorization: `Bearer ${token}`, // 1. 헤더 인증 (Render 이슈 해결의 핵심)
+                    'Content-Type': 'application/json'
+                },
+                withCredentials: true // 2. 쿠키 인증 (보조 수단)
             });
 
             setMessage(`✨ 일기가 우주에 성공적으로 기록되었습니다.`);
@@ -125,8 +130,11 @@ const DiaryPage: React.FC = () => {
 
         } catch (error: any) {
             setIsLoading(false);
+            console.error("Diary Save Error:", error);
+
             if (error.response?.status === 401) {
                 setMessage('❌ 세션이 만료되었습니다. 다시 로그인해 주세요.');
+                // 토큰 문제일 수 있으니 로그아웃 처리
                 setTimeout(handleLogout, 2000);
                 return;
             }
