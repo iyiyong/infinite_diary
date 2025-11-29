@@ -73,10 +73,10 @@ const CalendarPage: React.FC = () => {
             const response = await axios.get(
                 `${API_URL}/api/diary/month/${date.getFullYear()}/${date.getMonth() + 1}`,
                 {
-                    headers: { Authorization: `Bearer ${token}` }, // 헤더 인증 (Render 이슈 해결 핵심 1)
+                    headers: { Authorization: `Bearer ${token}` },
                     signal: newController.signal,
                     timeout: 60000, // 60초 대기 (무료 서버 슬립 모드 대응)
-                    withCredentials: true // 🚨 [추가됨] 쿠키 인증 (Render 이슈 해결 핵심 2)
+                    withCredentials: true // 🚨 [필수 추가] 인증 정보(쿠키) 포함 설정
                 }
             );
 
