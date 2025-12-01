@@ -21,23 +21,24 @@ const StarHighlight = ({ x, y, color }: { x: number, y: number, color: string })
 const GemIconSVG = styled.svg<GemIconProps>`
   width: 60px;
   height: 60px;
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* 쫀득한 애니메이션 */
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); /* 텐션감 있는 애니메이션 */
   
   /* SVG 내부 색상 제어 */
   color: ${props => props.fillColor}; 
 
-  /* 활성화 시 그림자 효과 강화 */
+  /* 활성화 시 그림자 효과 강화 (네온 느낌) */
   filter: ${props => props.$isActive
-      ? `drop-shadow(0 0 12px ${props.fillColor})`
-      : `drop-shadow(0 0 4px rgba(0, 0, 0, 0.5))`};
+      ? `drop-shadow(0 0 15px ${props.fillColor}) drop-shadow(0 0 5px white)`
+      : `drop-shadow(0 0 2px rgba(255, 255, 255, 0.3))`};
   
   /* 활성화 시 크기 확대 */
-  transform: ${props => props.$isActive ? 'scale(1.2) translateY(-5px)' : 'scale(1)'};
+  transform: ${props => props.$isActive ? 'scale(1.15) translateY(-5px)' : 'scale(1)'};
+  opacity: ${props => props.$isActive ? 1 : 0.85};
 
   /* 📱 모바일 최적화: 아이콘 크기 조정 */
   @media (max-width: 768px) {
-    width: 50px;
-    height: 50px;
+    width: 48px;
+    height: 48px;
   }
 `;
 
@@ -77,71 +78,84 @@ const GemIcon: React.FC<GemIconProps> = (props) => {
 
 // --- Styled Components (디자인 및 반응형) ---
 
-// 선택 시 은은하게 빛나는 애니메이션
+// 선택 시 은은하게 빛나는 애니메이션 (테두리 위주)
 const shimmer = keyframes`
-  0% { box-shadow: 0 0 15px var(--shadow-color); border-color: var(--border-color); }
-  50% { box-shadow: 0 0 25px var(--shadow-color), 0 0 10px rgba(255,255,255,0.2); border-color: white; }
-  100% { box-shadow: 0 0 15px var(--shadow-color); border-color: var(--border-color); }
+  0% { box-shadow: 0 0 10px var(--shadow-color), inset 0 0 5px var(--shadow-color); border-color: var(--border-color); }
+  50% { box-shadow: 0 0 20px var(--shadow-color), inset 0 0 10px var(--shadow-color); border-color: white; }
+  100% { box-shadow: 0 0 10px var(--shadow-color), inset 0 0 5px var(--shadow-color); border-color: var(--border-color); }
 `;
 
 const StyledEmotionButton = styled.button<{ $isSelected: boolean; $gemStyle: GemStyleProps }>`
   /* CSS 변수 설정 */
   --main-color: ${props => props.$gemStyle.mainColor};
   --shadow-color: ${props => props.$gemStyle.shadowColor};
-  --gradient: ${props => props.$gemStyle.gradient};
   --border-color: ${props => props.$gemStyle.borderColor};
 
-  padding: 15px;
+  position: relative;
+  overflow: hidden;
   cursor: pointer;
-  /* 선택 여부에 따른 배경 및 테두리 변경 */
-  background: ${props => props.$isSelected ? 'linear-gradient(145deg, rgba(50,50,50,0.9), rgba(20,20,20,0.95))' : 'rgba(30, 30, 30, 0.6)'};
-  color: ${props => props.$isSelected ? 'white' : '#ccc'};
-  border: ${props => props.$isSelected ? '2px solid var(--border-color)' : '1px solid rgba(255, 255, 255, 0.1)'};
-  border-radius: 20px;
-  font-family: inherit;
-  font-weight: bold;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   
-  /* 데스크탑 기본 크기 */
-  width: 160px;
-  height: 170px;
-  
+  /* Layout */
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   gap: 12px;
   
-  /* 글래스모피즘 효과 */
-  backdrop-filter: blur(10px);
-  box-shadow: ${props => props.$isSelected 
-    ? '0 10px 25px var(--shadow-color), inset 0 0 10px rgba(255,255,255,0.1)' 
-    : '0 4px 15px rgba(0, 0, 0, 0.3)'};
+  /* Size (Desktop) */
+  width: 160px;
+  height: 170px;
+  padding: 15px;
+  border-radius: 24px;
   
-  position: relative;
-  overflow: hidden;
+  /* 💎 Glassmorphism Style (핵심 수정) */
+  /* 배경을 매우 투명하게 설정하여 뒤의 별이 보이도록 함 */
+  background: ${props => props.$isSelected 
+    ? 'rgba(255, 255, 255, 0.12)' 
+    : 'rgba(255, 255, 255, 0.03)'}; 
+  
+  /* 블러 효과로 텍스트 가독성 확보하되, 너무 뿌옇게 하지 않음 */
+  backdrop-filter: blur(6px); 
+  -webkit-backdrop-filter: blur(6px);
+
+  /* 테두리: 얇고 세련되게 */
+  border: 1px solid ${props => props.$isSelected 
+    ? 'var(--main-color)' 
+    : 'rgba(255, 255, 255, 0.1)'};
+  
+  color: ${props => props.$isSelected ? 'white' : 'rgba(255, 255, 255, 0.8)'};
+  
+  /* 그림자: 선택 안됐을 땐 거의 없게 */
+  box-shadow: ${props => props.$isSelected 
+    ? '0 8px 32px 0 rgba(0, 0, 0, 0.3)' 
+    : 'none'};
+
+  font-family: inherit;
+  transition: all 0.3s ease;
 
   /* 선택 시 애니메이션 적용 */
   ${props => props.$isSelected && css`
-    animation: ${shimmer} 2s infinite ease-in-out;
+    animation: ${shimmer} 2.5s infinite ease-in-out;
     transform: translateY(-5px);
   `}
 
   &:hover {
-    transform: translateY(-5px);
-    background: rgba(50, 50, 60, 0.8);
-    border-color: var(--main-color);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+    transform: translateY(-3px);
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
   }
 
   /* 📱 모바일 최적화 (Mobile Responsive) */
   @media (max-width: 768px) {
-    width: 100%; /* 그리드 내에서 꽉 차게 */
-    height: auto;
-    aspect-ratio: 1 / 1.1; /* 비율 유지 */
+    width: 100%; 
+    height: 140px; /* 높이를 약간 줄여서 화면 효율성 증대 */
     padding: 10px;
     gap: 8px;
-    border-radius: 16px;
+    border-radius: 18px;
+    
+    /* 모바일에서는 블러를 조금 더 주어 텍스트 가독성 확보 */
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
   }
 `;
 
@@ -151,28 +165,32 @@ const GemContainer = styled.div`
   justify-content: center;
   align-items: center;
   width: 100%;
+  filter: drop-shadow(0 5px 5px rgba(0,0,0,0.2));
 `;
 
 const KaomojiStyle = styled.span`
-  font-size: 1.4rem;
+  font-size: 1.3rem;
   line-height: 1.2;
   white-space: nowrap;
   color: inherit;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  font-weight: 700;
+  /* 텍스트 그림자로 배경이 밝아도 잘 보이게 */
+  text-shadow: 0 2px 4px rgba(0,0,0,0.6);
 
   @media (max-width: 768px) {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
   }
 `;
 
 const DescriptionStyle = styled.span`
-  font-size: 1rem;
-  color: inherit; 
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.9);
   white-space: nowrap;
-  opacity: 0.9;
+  font-weight: 500;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
 
   @media (max-width: 768px) {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
   }
 `;
 
@@ -184,37 +202,38 @@ const ButtonGroup = styled.div`
   width: 100%;
   max-width: 900px;
   
-  /* 📱 모바일: 2열 그리드로 변경하여 꽉 차게 표시 */
+  /* 📱 모바일: 2열 그리드로 꽉 차게 */
   @media (max-width: 768px) {
     display: grid;
     grid-template-columns: repeat(2, 1fr); /* 2칸씩 배치 */
     gap: 12px;
-    padding: 0 10px;
+    padding: 0 5px; /* 양옆 여백 최소화 */
   }
   
-  /* 아주 작은 화면 대응 */
   @media (max-width: 360px) {
-    grid-template-columns: 1fr; /* 1칸씩 배치 */
+    gap: 8px; /* 아주 작은 화면에선 간격 더 좁게 */
   }
 `;
 
 const RomanticQuote = styled.p`
     font-size: 1rem;
     margin-bottom: 2rem;
-    max-width: 600px;
+    max-width: 650px;
     text-align: center;
-    font-family: serif;
+    font-family: serif; /* 명조체 계열 */
     font-style: italic;
-    color: #FFD700; /* 파스텔 옐로우 */
-    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    color: #FFD700; /* 골드 */
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
     line-height: 1.6;
     padding: 0 20px;
-    word-break: keep-all; /* 단어 단위 줄바꿈 */
+    word-break: keep-all;
 
     @media (max-width: 768px) {
         font-size: 0.9rem;
         margin-bottom: 1.5rem;
-        line-height: 1.4;
+        line-height: 1.5;
+        padding: 0 10px;
+        opacity: 0.9;
     }
 `;
 
@@ -229,7 +248,8 @@ const EmotionSelector: React.FC<EmotionSelectorProps> = ({ onSelect, currentEmot
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
             
             <RomanticQuote>
-                18~19세기 유럽의 귀족들은 말 대신 보석으로 감정을 전하는 것을 유행으로 삼았고, 그 표현법은 마치 정교하게 규정된 하나의 공식 언어와도 같았습니다.
+                "18세기 귀족들은 말 대신 보석으로 마음을 전했습니다.<br/>
+                오늘 당신의 마음은 어떤 보석을 닮았나요?"
             </RomanticQuote>
             
             <ButtonGroup>

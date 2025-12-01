@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Canvas } from '@react-three/fiber';
 import Calendar from 'react-calendar';
-import 'react-calendar/dist/Calendar.css';
+import 'react-calendar/dist/Calendar.css'; // 기본 스타일 불러오기 (아래 style 태그에서 오버라이딩)
 import axios from 'axios';
 import moment from 'moment';
 
@@ -51,8 +51,6 @@ const CalendarPage: React.FC = () => {
     const fetchMonthlyDiary = useCallback(async (date: Date) => {
         const token = localStorage.getItem('diaryToken');
         
-        // 🚨 [강력 수정] 토큰 검사 강화 (문자열 포함 여부까지 확인)
-        // 토큰이 없거나, "undefined", "null"이라는 글자가 포함되어 있으면 즉시 삭제
         if (!token || token === 'undefined' || token === 'null' || String(token).includes('undefined')) {
             console.warn(`⛔ 불량 토큰 감지됨 (값: ${token}). 자동 삭제 및 로그아웃 실행.`);
             localStorage.removeItem('diaryToken');
@@ -121,7 +119,6 @@ const CalendarPage: React.FC = () => {
 
     useEffect(() => {
         const token = localStorage.getItem('diaryToken');
-        // 초기 진입 시에도 불량 토큰 검사
         if (!token || token === 'undefined' || token === 'null' || String(token).includes('undefined')) {
             localStorage.removeItem('diaryToken');
             navigate('/');
@@ -142,9 +139,11 @@ const CalendarPage: React.FC = () => {
             const dateString = moment(value).format('YYYY-MM-DD');
             const entry = diaryEntries.find(e => e.date === dateString);
             setSelectedEntry(entry || null);
+            
+            // 모바일에서 날짜 클릭 시 상세 내용으로 부드럽게 스크롤
             if (window.innerWidth <= 768) {
                 setTimeout(() => {
-                    document.getElementById('detail-section')?.scrollIntoView({ behavior: 'smooth' });
+                    document.getElementById('detail-section')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 }, 100);
             }
         } else {
@@ -165,7 +164,7 @@ const CalendarPage: React.FC = () => {
                             className="emotion-dot"
                             style={{
                                 backgroundColor: emotion.gemStyle.mainColor,
-                                boxShadow: `0 0 6px ${emotion.gemStyle.shadowColor}`
+                                boxShadow: `0 0 8px ${emotion.gemStyle.shadowColor}`
                             }}
                         />
                     )}
@@ -178,6 +177,7 @@ const CalendarPage: React.FC = () => {
 
     return (
         <div className="calendar-page-wrapper">
+            {/* Background Canvas (Fixed) */}
             <div className="background-canvas">
                 <Canvas camera={{ position: [0, 0, 1] }}>
                     <StarsBackground />
@@ -186,10 +186,12 @@ const CalendarPage: React.FC = () => {
             </div>
 
             <div className="calendar-content-container">
-                <div className="calendar-card">
+                <div className="calendar-card glass-card">
                     <div className="header-row">
                         <h1 className="page-title">🗓️ 기록된 우주</h1>
-                        <button onClick={() => navigate('/diary')} className="icon-btn" title="일기 쓰기">✏️</button>
+                        <button onClick={() => navigate('/diary')} className="icon-btn" title="일기 쓰기">
+                            <span role="img" aria-label="write">✏️</span>
+                        </button>
                     </div>
 
                     <div className="status-bar">
@@ -223,12 +225,13 @@ const CalendarPage: React.FC = () => {
                         </h3>
 
                         {selectedEntry ? (
-                            <div className="entry-card fade-in">
+                            <div className="entry-card fade-in glass-inner-card">
                                 <div className="entry-header">
                                     <div className="meta-group">
-                                        <span className="meta-badge weather">{weatherIcons[selectedEntry.weather]}</span>
-                                        <span className="meta-badge emotion" style={{
-                                            color: emotionOptions.find(e => e.emotionKey === selectedEntry.emotion)?.gemStyle.mainColor
+                                        <span className="meta-badge weather glass-badge">{weatherIcons[selectedEntry.weather]}</span>
+                                        <span className="meta-badge emotion glass-badge" style={{
+                                            color: emotionOptions.find(e => e.emotionKey === selectedEntry.emotion)?.gemStyle.mainColor,
+                                            textShadow: `0 0 5px ${emotionOptions.find(e => e.emotionKey === selectedEntry.emotion)?.gemStyle.shadowColor}`
                                         }}>
                                             {emotionOptions.find(e => e.emotionKey === selectedEntry.emotion)?.description}
                                         </span>
@@ -246,63 +249,323 @@ const CalendarPage: React.FC = () => {
                         )}
 
                         <div className="nav-buttons">
-                            <button onClick={handleLogout} className="logout-btn">로그아웃</button>
+                            <button onClick={handleLogout} className="logout-btn glass-btn">로그아웃</button>
                         </div>
                     </div>
                 </div>
             </div>
 
             <style>{`
-                .calendar-page-wrapper { position: relative; width: 100%; min-height: 100vh; background: #0a0a14; overflow-y: auto; }
-                .background-canvas { position: fixed !important; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; }
-                .calendar-content-container { position: relative; z-index: 10; padding: 20px; display: flex; justify-content: center; min-height: 100vh; box-sizing: border-box; }
-                .calendar-card { width: 100%; max-width: 550px; background: rgba(20, 20, 35, 0.85); backdrop-filter: blur(20px); border-radius: 24px; padding: 25px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 20px 50px rgba(0,0,0,0.6); display: flex; flex-direction: column; gap: 15px; margin-top: 20px; margin-bottom: 40px; }
+                /* --- Layout & Base --- */
+                .calendar-page-wrapper {
+                    position: relative;
+                    width: 100%;
+                    height: 100vh;
+                    background: rgb(10, 10, 20);
+                    overflow-y: auto; /* 전체 스크롤 */
+                    -webkit-overflow-scrolling: touch;
+                    font-family: 'Pretendard', sans-serif;
+                }
+
+                .background-canvas {
+                    position: fixed !important;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    z-index: 0;
+                    pointer-events: none;
+                }
+
+                .calendar-content-container {
+                    position: relative;
+                    z-index: 10;
+                    padding: 30px 20px;
+                    display: flex;
+                    justify-content: center;
+                    min-height: 100%;
+                    box-sizing: border-box;
+                }
+
+                /* --- Glassmorphism Card Style --- */
+                .glass-card {
+                    background: rgba(15, 20, 35, 0.55);
+                    backdrop-filter: blur(16px);
+                    -webkit-backdrop-filter: blur(16px);
+                    border-radius: 24px;
+                    border: 1px solid rgba(255, 255, 255, 0.12);
+                    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+                    width: 100%;
+                    max-width: 600px; /* PC에서는 너무 넓지 않게 */
+                    padding: 30px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 20px;
+                    color: white;
+                    animation: floatUp 0.8s ease-out;
+                }
+
                 .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-                .page-title { font-size: 1.6rem; color: white; margin: 0; font-weight: 800; text-shadow: 0 0 10px rgba(255,255,255,0.3); }
-                .icon-btn { background: linear-gradient(135deg, #3700cc, #6a00ff); border: none; border-radius: 50%; width: 45px; height: 45px; cursor: pointer; font-size: 1.3rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(106, 0, 255, 0.4); transition: transform 0.2s; }
+                .page-title {
+                    font-size: 1.8rem;
+                    color: #fff;
+                    margin: 0;
+                    font-weight: 800;
+                    text-shadow: 0 0 15px rgba(255,255,255,0.4);
+                }
+
+                /* --- Buttons --- */
+                .icon-btn {
+                    background: rgba(255, 255, 255, 0.1);
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    border-radius: 50%;
+                    width: 48px;
+                    height: 48px;
+                    cursor: pointer;
+                    font-size: 1.4rem;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    backdrop-filter: blur(4px);
+                    transition: all 0.3s ease;
+                }
+                .icon-btn:hover { background: rgba(255, 255, 255, 0.2); transform: scale(1.1); }
                 .icon-btn:active { transform: scale(0.95); }
-                .status-bar { height: 20px; text-align: center; font-size: 0.9rem; }
-                .error { color: #ff6b6b; font-weight: bold; }
+
+                .status-bar { height: 24px; text-align: center; font-size: 0.95rem; font-weight: 500; }
+                .error { color: #ff6b6b; font-weight: bold; text-shadow: 0 0 5px rgba(255, 107, 107, 0.3); }
                 .loading { color: #00ffcc; animation: pulse 1.5s infinite; }
-                @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
-                .calendar-wrapper { background: rgba(0, 0, 0, 0.2); border-radius: 20px; padding: 15px; border: 1px solid rgba(255, 255, 255, 0.05); }
-                .infinite-calendar { width: 100%; background: transparent !important; border: none !important; color: #fff !important; font-family: inherit; }
-                .react-calendar__navigation button { color: #00e0ff !important; font-size: 1.1rem; font-weight: 800; background: none !important; }
+
+                /* --- Calendar Customization (React-Calendar Override) --- */
+                .calendar-wrapper {
+                    background: rgba(0, 0, 0, 0.2);
+                    border-radius: 20px;
+                    padding: 15px;
+                    border: 1px solid rgba(255, 255, 255, 0.05);
+                }
+
+                .infinite-calendar {
+                    width: 100%;
+                    background: transparent !important;
+                    border: none !important;
+                    color: #fff !important;
+                    font-family: inherit;
+                }
+
+                /* Header (Month/Year) */
+                .react-calendar__navigation { margin-bottom: 1rem; }
+                .react-calendar__navigation button {
+                    color: #00e0ff !important;
+                    font-size: 1.2rem;
+                    font-weight: 800;
+                    background: none !important;
+                    text-shadow: 0 0 10px rgba(0, 224, 255, 0.4);
+                }
                 .react-calendar__navigation button:disabled { opacity: 0.5; }
-                .react-calendar__month-view__weekdays { font-size: 0.9rem; color: #888; text-transform: uppercase; margin-bottom: 10px; abbr { text-decoration: none; } }
-                .react-calendar__tile { height: 70px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 8px; font-size: 1rem; position: relative; border-radius: 12px; transition: background 0.2s; color: #eee; }
-                .react-calendar__tile:enabled:hover, .react-calendar__tile:enabled:focus { background: rgba(255,255,255,0.1) !important; }
-                .react-calendar__tile--now { background: rgba(0,191,255,0.1) !important; border: 1px solid rgba(0,191,255,0.3); }
-                .react-calendar__tile--active { background: #00ffcc !important; color: #000 !important; font-weight: bold; box-shadow: 0 0 15px rgba(0, 255, 204, 0.4); }
-                .tile-content { margin-top: 4px; display: flex; flex-direction: column; align-items: center; gap: 3px; }
-                .emotion-dot { width: 6px; height: 6px; border-radius: 50%; }
-                .weather-icon { font-size: 0.85rem; }
-                .detail-section { margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.1); animation: slideUp 0.4s ease-out; }
-                .detail-date { color: #ffcc00; margin-bottom: 15px; font-size: 1.3rem; text-align: center; font-weight: 700; text-shadow: 0 0 10px rgba(255, 204, 0, 0.3); }
-                .entry-card { background: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 15px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-                .entry-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
-                .meta-group { display: flex; gap: 10px; align-items: center; width: 100%; justify-content: space-between; }
-                .meta-badge { padding: 6px 12px; background: rgba(0, 0, 0, 0.4); border-radius: 12px; font-size: 0.9rem; font-weight: bold; }
-                .text-scroll-area { max-height: 200px; overflow-y: auto; padding-right: 5px; }
-                .text-scroll-area::-webkit-scrollbar { width: 4px; }
-                .text-scroll-area::-webkit-scrollbar-thumb { background: #555; border-radius: 2px; }
-                .text { color: #ddd; line-height: 1.6; white-space: pre-wrap; font-size: 1rem; letter-spacing: 0.5px; }
-                .empty-state { text-align: center; color: #666; padding: 30px 0; font-style: italic; display: flex; flex-direction: column; align-items: center; gap: 10px; }
-                .link-btn { background: none; border: none; color: #00e0ff; cursor: pointer; font-size: 1rem; text-decoration: underline; }
+                .react-calendar__navigation button:enabled:hover,
+                .react-calendar__navigation button:enabled:focus {
+                    background-color: rgba(255, 255, 255, 0.1) !important;
+                    border-radius: 10px;
+                }
+
+                /* Weekdays */
+                .react-calendar__month-view__weekdays {
+                    font-size: 0.9rem;
+                    color: rgba(255, 255, 255, 0.6);
+                    text-transform: uppercase;
+                    margin-bottom: 10px;
+                    font-weight: 600;
+                    abbr { text-decoration: none; }
+                }
+
+                /* Days (Tiles) */
+                .react-calendar__tile {
+                    height: 75px; /* PC Default */
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: flex-start;
+                    padding-top: 8px;
+                    font-size: 1.1rem;
+                    position: relative;
+                    border-radius: 16px;
+                    transition: all 0.2s;
+                    color: #eee;
+                    overflow: visible !important;
+                }
+                .react-calendar__tile:enabled:hover {
+                    background: rgba(255,255,255,0.15) !important;
+                    transform: translateY(-2px);
+                }
+
+                /* Today */
+                .react-calendar__tile--now {
+                    background: rgba(0, 191, 255, 0.15) !important;
+                    border: 1px solid rgba(0, 191, 255, 0.5);
+                    box-shadow: 0 0 10px rgba(0, 191, 255, 0.2);
+                }
+
+                /* Selected */
+                .react-calendar__tile--active {
+                    background: linear-gradient(135deg, #00ffcc 0%, #0099cc 100%) !important;
+                    color: #000 !important;
+                    font-weight: bold;
+                    box-shadow: 0 0 15px rgba(0, 255, 204, 0.5);
+                    transform: scale(1.02);
+                }
+                
+                /* Emotion Dots inside Tile */
+                .tile-content {
+                    margin-top: 6px;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 4px;
+                }
+                .emotion-dot {
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 50%;
+                    border: 1px solid rgba(0,0,0,0.3);
+                }
+                .weather-icon { font-size: 0.9rem; filter: drop-shadow(0 0 2px rgba(0,0,0,0.5)); }
+
+                /* --- Detail Section --- */
+                .detail-section {
+                    margin-top: 20px;
+                    padding-top: 25px;
+                    border-top: 1px solid rgba(255, 255, 255, 0.15);
+                    animation: slideUp 0.5s ease-out;
+                }
+
+                .detail-date {
+                    color: #ffcc00;
+                    margin-bottom: 20px;
+                    font-size: 1.4rem;
+                    text-align: center;
+                    font-weight: 700;
+                    text-shadow: 0 0 10px rgba(255, 204, 0, 0.4);
+                }
+
+                .glass-inner-card {
+                    background: rgba(0, 0, 0, 0.25);
+                    padding: 25px;
+                    border-radius: 18px;
+                    border: 1px solid rgba(255, 255, 255, 0.08);
+                    margin-bottom: 25px;
+                }
+
+                .entry-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 15px;
+                    border-bottom: 1px solid rgba(255,255,255,0.1);
+                    padding-bottom: 12px;
+                }
+
+                .meta-group { display: flex; gap: 12px; align-items: center; width: 100%; }
+
+                .glass-badge {
+                    padding: 6px 14px;
+                    background: rgba(255, 255, 255, 0.1);
+                    border-radius: 30px;
+                    font-size: 0.95rem;
+                    font-weight: bold;
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    backdrop-filter: blur(4px);
+                }
+
+                .text-scroll-area {
+                    max-height: 250px;
+                    overflow-y: auto;
+                    padding-right: 8px;
+                }
+                .text {
+                    color: #e0e0e0;
+                    line-height: 1.7;
+                    white-space: pre-wrap;
+                    font-size: 1.05rem;
+                    letter-spacing: 0.3px;
+                }
+
+                .empty-state {
+                    text-align: center;
+                    color: #aaa;
+                    padding: 40px 0;
+                    font-style: italic;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 15px;
+                }
+                .link-btn {
+                    background: none;
+                    border: none;
+                    color: #00e0ff;
+                    cursor: pointer;
+                    font-size: 1rem;
+                    text-decoration: underline;
+                    font-weight: bold;
+                    text-shadow: 0 0 8px rgba(0, 224, 255, 0.3);
+                }
+
+                /* --- Footer Buttons --- */
                 .nav-buttons { display: flex; justify-content: center; margin-top: 10px; }
-                .logout-btn { background: none; border: 1px solid #444; color: #888; padding: 8px 20px; border-radius: 20px; cursor: pointer; font-size: 0.85rem; transition: all 0.2s; }
-                .logout-btn:hover { border-color: #666; color: #fff; }
-                @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+                .logout-btn {
+                    background: transparent;
+                    border: 1px solid rgba(255, 255, 255, 0.3);
+                    color: rgba(255, 255, 255, 0.7);
+                    padding: 10px 24px;
+                    border-radius: 12px;
+                    cursor: pointer;
+                    font-size: 0.9rem;
+                    transition: all 0.3s;
+                }
+                .logout-btn:hover {
+                    border-color: #ff6b6b;
+                    color: #ff6b6b;
+                    background: rgba(255, 107, 107, 0.1);
+                }
+
+                @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+                @keyframes floatUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
                 @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-                @media (max-width: 768px) {
-                    .calendar-content-container { padding: 10px; align-items: flex-start; }
-                    .calendar-card { padding: 20px 15px; margin-top: 10px; }
+
+                /* 📱 Mobile Responsive Tweaks */
+                @media (max-width: 600px) {
+                    .calendar-content-container {
+                        padding: 15px; /* 패딩 축소 */
+                        padding-bottom: 50px; /* 하단 여유 공간 */
+                    }
+                    
+                    .glass-card {
+                        padding: 20px 15px;
+                        border-radius: 20px;
+                        background: rgba(15, 20, 35, 0.65); /* 모바일 가독성 위해 약간 진하게 */
+                    }
+
                     .page-title { font-size: 1.5rem; }
-                    .react-calendar__tile { height: 60px; font-size: 0.9rem; }
-                    .weather-icon { font-size: 0.7rem; }
-                    .emotion-dot { width: 5px; height: 5px; }
-                    .entry-card { padding: 15px; }
-                    .text { font-size: 0.95rem; }
+                    .icon-btn { width: 40px; height: 40px; font-size: 1.2rem; }
+
+                    /* 달력 타일 크기 조정 */
+                    .react-calendar__tile {
+                        height: 65px;
+                        font-size: 1rem;
+                        padding-top: 6px;
+                    }
+                    
+                    .weather-icon { font-size: 0.8rem; }
+                    .emotion-dot { width: 6px; height: 6px; }
+
+                    /* 상세 영역 */
+                    .detail-section { margin-top: 15px; padding-top: 20px; }
+                    .detail-date { font-size: 1.2rem; margin-bottom: 15px; }
+                    
+                    .glass-inner-card { padding: 20px; }
+                    .meta-group { gap: 8px; }
+                    .glass-badge { padding: 5px 10px; font-size: 0.85rem; }
+                    .text { font-size: 1rem; }
                 }
             `}</style>
         </div>

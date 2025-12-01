@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Canvas } from '@react-three/fiber';
 import axios from 'axios';
-import moment from 'moment'; // 🔑 moment 임포트
+import moment from 'moment'; 
 
-// 🔑 절대 경로 임포트
+// 🔑 절대 경로 임포트 (환경에 맞게 유지)
 import EmotionSelector from '@/components/EmotionSelector';
 import { EmotionOption } from '@/constants/emotions.ts'; 
 
@@ -47,7 +47,6 @@ const BackgroundCanvas = React.memo(({ weather, step }: { weather: string, step:
 }, (prevProps, nextProps) => {
     return prevProps.weather === nextProps.weather && prevProps.step === nextProps.step;
 });
-
 
 const DiaryPage: React.FC = () => {
     const navigate = useNavigate();
@@ -106,10 +105,8 @@ const DiaryPage: React.FC = () => {
         const token = localStorage.getItem('diaryToken');
 
         try {
-            // 🔑 날짜 수정: 'YYYY-MM-DD' 형식으로 전송하여 덮어쓰기 보장
             const todayDate = moment().format('YYYY-MM-DD');
 
-            // 🚨 [핵심 수정] 헤더(Token)와 쿠키(Credentials) 동시 전송
             await axios.post(`/api/diary`, {
                 content: diaryContent,
                 emotion: selectedEmotion.emotionKey, 
@@ -117,10 +114,10 @@ const DiaryPage: React.FC = () => {
                 date: todayDate 
             }, {
                 headers: { 
-                    Authorization: `Bearer ${token}`, // 1. 헤더 인증 (Render 이슈 해결의 핵심)
+                    Authorization: `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
-                withCredentials: true // 2. 쿠키 인증 (보조 수단)
+                withCredentials: true
             });
 
             setMessage(`✨ 일기가 우주에 성공적으로 기록되었습니다.`);
@@ -134,7 +131,6 @@ const DiaryPage: React.FC = () => {
 
             if (error.response?.status === 401) {
                 setMessage('❌ 세션이 만료되었습니다. 다시 로그인해 주세요.');
-                // 토큰 문제일 수 있으니 로그아웃 처리
                 setTimeout(handleLogout, 2000);
                 return;
             }
@@ -154,7 +150,7 @@ const DiaryPage: React.FC = () => {
                     <button 
                         key={opt.key} 
                         onClick={() => selectWeather(opt.key)} 
-                        className={`selection-btn ${weather === opt.key ? 'active' : ''}`}
+                        className={`selection-btn glass-btn ${weather === opt.key ? 'active' : ''}`}
                     >
                         <span className="btn-icon">{opt.label}</span>
                         <span className="btn-desc">{opt.description}</span>
@@ -174,7 +170,7 @@ const DiaryPage: React.FC = () => {
             />
 
             <div className="control-row">
-                <button onClick={() => { setStep(1); setSelectedEmotion(null); setMessage(''); }} className="action-btn secondary">
+                <button onClick={() => { setStep(1); setSelectedEmotion(null); setMessage(''); }} className="action-btn secondary glass-btn">
                     뒤로 (날씨 다시 선택)
                 </button>
             </div>
@@ -199,7 +195,7 @@ const DiaryPage: React.FC = () => {
             </div>
             
             <textarea
-                className="diary-textarea"
+                className="diary-textarea glass-input"
                 rows={10}
                 value={diaryContent}
                 onChange={(e) => setDiaryContent(e.target.value)}
@@ -208,7 +204,7 @@ const DiaryPage: React.FC = () => {
             />
 
             <div className="control-row">
-                <button onClick={() => { setStep(2); setMessage(''); }} disabled={isLoading} className="action-btn secondary">
+                <button onClick={() => { setStep(2); setMessage(''); }} disabled={isLoading} className="action-btn secondary glass-btn">
                     뒤로
                 </button>
                 <button onClick={handleSubmitDiary} disabled={isLoading || !diaryContent.trim()} className="action-btn primary">
@@ -221,10 +217,14 @@ const DiaryPage: React.FC = () => {
     return (
         <div className="diary-page-wrapper">
             
-            <BackgroundCanvas weather={weather} step={step} />
+            {/* Background Canvas: Fixed at z-index 0 */}
+            <div className="canvas-container">
+                <BackgroundCanvas weather={weather} step={step} />
+            </div>
 
+            {/* Scrollable Overlay: z-index 10 */}
             <div className="diary-overlay">
-                <div className="diary-card">
+                <div className="diary-card glass-card">
                     <h1 className="main-title">🌌 Infinite Diary</h1>
                     
                     <div className="step-content">
@@ -240,10 +240,10 @@ const DiaryPage: React.FC = () => {
                     )}
 
                     <div className="footer-nav">
-                        <button onClick={handleGoToCalendar} disabled={isLoading} className="nav-btn">
+                        <button onClick={handleGoToCalendar} disabled={isLoading} className="nav-btn glass-btn">
                             🗓️ 기록된 우주 보기
                         </button>
-                        <button onClick={handleLogout} disabled={isLoading} className="nav-btn logout">
+                        <button onClick={handleLogout} disabled={isLoading} className="nav-btn logout glass-btn">
                             로그아웃
                         </button>
                     </div>
@@ -251,46 +251,55 @@ const DiaryPage: React.FC = () => {
             </div>
 
             <style>{`
-                /* --- 기본 PC 스타일 --- */
+                /* --- 레이아웃 & 기본 설정 --- */
                 .diary-page-wrapper {
                     position: relative;
                     width: 100%;
                     height: 100vh;
-                    overflow: hidden;
-                    font-family: sans-serif;
-                    background-color: rgb(26, 26, 26);
+                    overflow: hidden; /* 전체 페이지 스크롤 방지 */
+                    font-family: 'Pretendard', sans-serif;
+                    background-color: rgb(10, 10, 20);
+                }
+
+                /* 캔버스를 뒤에 고정 */
+                .canvas-container {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    z-index: 0;
                 }
 
                 .background-canvas {
-                    position: absolute !important;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    z-index: 1;
+                    width: 100% !important;
+                    height: 100% !important;
                 }
 
+                /* 스크롤 가능한 오버레이 영역 */
                 .diary-overlay {
-                    position: absolute;
-                    top: 0;
-                    left: 0;
+                    position: relative;
                     z-index: 10;
                     width: 100%;
                     height: 100%;
+                    overflow-y: auto; /* 내부 스크롤 허용 */
                     display: flex;
                     justify-content: center;
-                    align-items: center;
+                    align-items: center; /* PC에서는 중앙 정렬 */
                     padding: 20px;
-                    overflow-y: auto;
+                    box-sizing: border-box;
+                    -webkit-overflow-scrolling: touch; /* 모바일 부드러운 스크롤 */
                 }
 
-                .diary-card {
-                    background-color: rgba(10, 10, 10, 0.85);
-                    backdrop-filter: blur(8px);
+                /* --- Glassmorphism Card (핵심 디자인) --- */
+                .glass-card {
+                    background: rgba(15, 20, 35, 0.45); /* 투명도 높임 (배경 잘 보이게) */
+                    backdrop-filter: blur(12px); /* 배경 블러 처리 */
+                    -webkit-backdrop-filter: blur(12px);
+                    border: 1px solid rgba(255, 255, 255, 0.15); /* 은은한 테두리 */
+                    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+                    border-radius: 24px;
                     padding: 40px;
-                    border-radius: 20px;
-                    box-shadow: 0 0 25px rgba(0, 255, 204, 0.15), 0 0 50px rgba(0, 0, 0, 0.7);
-                    border: 1px solid rgba(255, 255, 255, 0.1);
                     width: 100%;
                     max-width: 850px;
                     color: white;
@@ -298,21 +307,37 @@ const DiaryPage: React.FC = () => {
                     display: flex;
                     flex-direction: column;
                     gap: 20px;
-                    max-height: 95vh;
-                    overflow-y: auto;
+                    animation: floatUp 0.8s ease-out;
                 }
 
                 .main-title {
                     font-size: 3rem;
-                    text-shadow: 0 0 10px rgba(255, 204, 0, 0.7);
+                    text-shadow: 0 0 15px rgba(255, 204, 0, 0.6), 0 0 30px rgba(0, 0, 0, 0.5);
                     margin-bottom: 10px;
                     color: #ffcc00;
+                    letter-spacing: 2px;
                 }
 
                 .step-title {
                     margin-bottom: 30px;
                     font-size: 2rem;
-                    text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+                    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+                    font-weight: 600;
+                }
+
+                /* --- Buttons & Inputs (Glass Style) --- */
+                .glass-btn {
+                    background: rgba(255, 255, 255, 0.05);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    backdrop-filter: blur(4px);
+                    color: white;
+                    transition: all 0.3s ease;
+                }
+                .glass-btn:hover:not(:disabled) {
+                    background: rgba(255, 255, 255, 0.15);
+                    border-color: rgba(255, 255, 255, 0.4);
+                    transform: translateY(-2px);
+                    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
                 }
 
                 .selection-grid {
@@ -325,160 +350,173 @@ const DiaryPage: React.FC = () => {
                 .selection-btn {
                     padding: 20px;
                     cursor: pointer;
-                    background-color: rgba(30, 30, 30, 0.9);
-                    color: white;
-                    border: 2px solid rgb(68, 68, 68);
-                    border-radius: 15px;
-                    width: 150px;
+                    border-radius: 20px;
+                    width: 140px;
                     height: 140px;
                     display: flex;
                     flex-direction: column;
                     justify-content: center;
                     align-items: center;
                     gap: 10px;
-                    transition: all 0.3s ease;
-                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
                 }
 
-                .selection-btn:hover, .selection-btn.active {
-                    transform: scale(1.05);
-                    border-color: rgb(0, 255, 204);
-                    box-shadow: 0 0 15px rgba(0, 255, 204, 0.3);
+                .selection-btn.active {
+                    background: rgba(0, 255, 204, 0.15);
+                    border-color: #00ffcc;
+                    box-shadow: 0 0 20px rgba(0, 255, 204, 0.4);
                 }
 
-                .btn-icon { font-size: 3rem; }
-                .btn-desc { font-size: 1.1rem; color: #bbb; }
+                .btn-icon { font-size: 3.5rem; filter: drop-shadow(0 0 5px rgba(0,0,0,0.5)); }
+                .btn-desc { font-size: 1.1rem; color: #ddd; font-weight: 500; }
 
+                /* --- Tags & Textarea --- */
                 .status-tags {
                     display: flex;
                     justify-content: center;
-                    gap: 10px;
+                    gap: 12px;
                     flex-wrap: wrap;
-                    margin-bottom: 15px;
+                    margin-bottom: 20px;
                 }
 
                 .tag {
-                    padding: 8px 16px;
-                    border-radius: 20px;
-                    font-size: 1.2rem;
-                }
-                .weather-tag { background-color: rgba(51, 51, 51, 0.8); }
-
-                .diary-textarea {
-                    width: 100%;
-                    padding: 20px;
+                    padding: 8px 18px;
+                    border-radius: 50px;
                     font-size: 1.1rem;
-                    margin-top: 10px;
-                    margin-bottom: 20px;
-                    border-radius: 10px;
-                    border: 1px solid rgb(68, 68, 68);
-                    background-color: rgba(51, 51, 51, 0.6);
+                    backdrop-filter: blur(5px);
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+                }
+                .weather-tag { background-color: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255,255,255,0.1); }
+
+                .glass-input {
+                    width: 100%;
+                    padding: 25px;
+                    font-size: 1.1rem;
+                    border-radius: 16px;
+                    border: 1px solid rgba(255, 255, 255, 0.15);
+                    background: rgba(0, 0, 0, 0.2); /* 입력창은 약간 어둡게 */
                     color: white;
                     resize: vertical;
                     font-family: inherit;
-                    min-height: 200px;
+                    min-height: 240px;
+                    line-height: 1.6;
+                    transition: border-color 0.3s;
                 }
-                .diary-textarea:focus {
+                .glass-input:focus {
                     outline: none;
-                    border-color: #00ffcc;
-                    background-color: rgba(51, 51, 51, 0.9);
+                    border-color: #00BFFF;
+                    background: rgba(0, 0, 0, 0.3);
+                    box-shadow: 0 0 15px rgba(0, 191, 255, 0.2);
                 }
+                .glass-input::placeholder { color: rgba(255, 255, 255, 0.4); }
 
+                /* --- Control Buttons --- */
                 .control-row {
                     display: flex;
                     justify-content: center;
                     gap: 15px;
-                    margin-top: 10px;
+                    margin-top: 25px;
                 }
 
                 .action-btn {
-                    padding: 12px 25px;
+                    padding: 14px 30px;
                     font-size: 1.1rem;
                     border: none;
-                    border-radius: 8px;
+                    border-radius: 12px;
                     font-weight: bold;
                     cursor: pointer;
                     transition: all 0.2s;
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
                 }
-                .action-btn:hover { transform: scale(1.05); }
-                .action-btn.primary { background: linear-gradient(45deg, #3700cc, #5b2add); color: white; }
-                .action-btn.secondary { background-color: rgb(85, 85, 85); color: white; }
+                .action-btn.primary {
+                    background: linear-gradient(135deg, #00BFFF 0%, #0066FF 100%);
+                    color: white;
+                }
+                .action-btn.primary:hover {
+                    box-shadow: 0 0 20px rgba(0, 191, 255, 0.6);
+                    transform: scale(1.03);
+                }
 
+                /* --- Message & Footer --- */
                 .message-box {
-                    margin-top: 15px;
+                    margin-top: 20px;
                     font-weight: bold;
-                    padding: 10px;
-                    border-radius: 5px;
+                    padding: 15px;
+                    border-radius: 12px;
+                    backdrop-filter: blur(5px);
                 }
-                .message-box.success { color: rgb(144, 238, 144); background: rgba(0, 255, 0, 0.1); }
-                .message-box.error { color: rgb(255, 77, 77); background: rgba(255, 0, 0, 0.1); }
+                .message-box.success { color: #00ffcc; background: rgba(0, 255, 204, 0.1); border: 1px solid rgba(0,255,204,0.2); }
+                .message-box.error { color: #ff6b6b; background: rgba(255, 107, 107, 0.1); border: 1px solid rgba(255,107,107,0.2); }
 
                 .footer-nav {
-                    margin-top: 30px;
+                    margin-top: 40px;
                     display: flex;
                     justify-content: center;
                     gap: 15px;
-                    border-top: 1px solid rgba(255, 255, 255, 0.1);
                     padding-top: 20px;
+                    border-top: 1px solid rgba(255, 255, 255, 0.1);
                 }
-
                 .nav-btn {
                     padding: 10px 20px;
                     font-size: 1rem;
-                    border: none;
-                    border-radius: 5px;
+                    border-radius: 10px;
                     cursor: pointer;
-                    font-weight: bold;
-                    background-color: #00ffcc;
-                    color: #1a1a1a;
+                    font-weight: 600;
                 }
-                .nav-btn.logout { background-color: #ffcc00; }
+                .nav-btn.logout { color: #ffcc00; border-color: rgba(255, 204, 0, 0.3); }
+                .nav-btn.logout:hover { background: rgba(255, 204, 0, 0.15); }
 
-                .fade-in { animation: fadeIn 0.5s ease-in; }
-                @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+                .fade-in { animation: fadeIn 0.6s ease-out; }
+                @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+                @keyframes floatUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 
-                /* 📱 모바일 반응형 스타일 */
+                /* 📱 Mobile Responsive (완벽한 모바일 뷰) */
                 @media (max-width: 768px) {
                     .diary-overlay {
-                        align-items: flex-start; /* 위쪽 정렬 (키보드 가림 방지) */
-                        padding: 10px;
+                        padding: 15px;
+                        align-items: flex-start; /* 스크롤을 위해 위쪽 정렬 */
                     }
 
-                    .diary-card {
-                        padding: 20px;
-                        margin-top: 20px;
-                        max-height: none; /* 스크롤 전체 허용 */
-                        height: auto;
-                        overflow: visible;
+                    .glass-card {
+                        padding: 25px 20px;
+                        margin-top: 10px;
+                        margin-bottom: 40px; /* 하단 스크롤 여유 공간 */
+                        border-radius: 20px;
+                        background: rgba(10, 15, 30, 0.55); /* 모바일은 가독성 위해 약간 더 진하게 */
                     }
 
-                    .main-title { font-size: 2rem; }
-                    .step-title { font-size: 1.5rem; margin-bottom: 20px; }
+                    .main-title { font-size: 2.2rem; margin-bottom: 20px; }
+                    .step-title { font-size: 1.4rem; margin-bottom: 20px; }
 
-                    /* 날씨 선택 버튼 그리드 */
-                    .selection-grid {
-                        gap: 10px;
-                    }
+                    /* 날씨 버튼: 2열 그리드 */
                     .selection-btn {
-                        width: 45%; /* 2열 배치 */
+                        width: 44%; 
                         height: 120px;
                         padding: 15px;
+                        gap: 8px;
                     }
                     .btn-icon { font-size: 2.5rem; }
                     .btn-desc { font-size: 1rem; }
 
-                    /* 버튼 그룹 세로 배치 */
+                    /* 입력창 높이 조정 */
+                    .glass-input {
+                        min-height: 200px;
+                        font-size: 1rem;
+                        padding: 15px;
+                    }
+
+                    /* 버튼 세로 배치 */
                     .control-row {
                         flex-direction: column;
                         width: 100%;
+                        gap: 12px;
                     }
-                    .action-btn { width: 100%; }
+                    .action-btn { width: 100%; padding: 16px; font-size: 1.1rem; }
 
-                    /* 하단 네비게이션 */
                     .footer-nav {
                         flex-direction: column;
+                        gap: 12px;
                     }
-                    .nav-btn { width: 100%; }
+                    .nav-btn { width: 100%; padding: 14px; }
                 }
             `}</style>
         </div>
