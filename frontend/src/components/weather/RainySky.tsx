@@ -6,8 +6,8 @@ import * as THREE from 'three';
 // 이미지 Import
 import rainBg from '@/assets/weather/rain.png';
 
-// 🌧️ 빗방울 개수 조정 (12000 -> 8000) : 너무 어지럽지 않게 적당량으로 줄임
-const RAINDROP_COUNT = 8000;
+// 🌧️ 빗방울 개수 조정 (8000 -> 4000) : 부담스럽지 않게 절반으로 줄임
+const RAINDROP_COUNT = 4000;
 
 // 빗방울 애니메이션
 const RainEffect: React.FC = () => {
