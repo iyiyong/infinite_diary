@@ -63,7 +63,7 @@ router.post('/login', async (req, res) => {
         }
 
         // 토큰 생성
-        console.log(`[Token Gen] ${userId} 토큰 생성 중...`); // 👈 강제 업데이트용 로그 추가
+        console.log(`[Token Gen] ${userId} 토큰 생성 시도...`); 
         
         const token = jwt.sign(
             { userId: user._id, displayName: user.displayName }, 
@@ -80,13 +80,14 @@ router.post('/login', async (req, res) => {
             maxAge: 24 * 60 * 60 * 1000
         });
 
-        console.log(`--- LOGIN SUCCESS: ${userId} ---`);
-        console.log(`[Debug] 응답에 토큰 포함: ${token ? 'YES' : 'NO'}`); // 👈 디버깅용 로그
+        // 👇 [수정] 로그 메시지를 변경하여 Git이 파일 변경을 감지하게 함
+        console.log(`--- LOGIN SUCCESS (Token Sent): ${userId} ---`);
+        console.log(`[Debug] 응답에 토큰 포함 여부: ${token ? 'YES' : 'NO'}`);
 
         // 🚨 [핵심] JSON 응답에 토큰을 반드시 포함해야 합니다!
         res.status(200).json({
             message: '로그인 성공!',
-            token: token,  // 👈 이 줄이 없으면 절대 안 됩니다!
+            token: token,  // 👈 이 부분이 배포 서버에 반영되어야 합니다.
             displayName: user.displayName,
             userId: user.userId
         });
