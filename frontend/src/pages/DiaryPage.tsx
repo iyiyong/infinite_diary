@@ -291,12 +291,12 @@ const DiaryPage: React.FC = () => {
                     -webkit-overflow-scrolling: touch; /* 모바일 부드러운 스크롤 */
                 }
 
-                /* --- Glassmorphism Card (핵심 디자인) --- */
+                /* --- Glassmorphism Card (핵심 디자인: PC 기본) --- */
                 .glass-card {
-                    background: rgba(15, 20, 35, 0.45); /* 투명도 높임 (배경 잘 보이게) */
-                    backdrop-filter: blur(12px); /* 배경 블러 처리 */
+                    background: rgba(15, 20, 35, 0.45); /* PC는 적당한 투명도 */
+                    backdrop-filter: blur(12px); 
                     -webkit-backdrop-filter: blur(12px);
-                    border: 1px solid rgba(255, 255, 255, 0.15); /* 은은한 테두리 */
+                    border: 1px solid rgba(255, 255, 255, 0.15); 
                     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
                     border-radius: 24px;
                     padding: 40px;
@@ -393,7 +393,7 @@ const DiaryPage: React.FC = () => {
                     font-size: 1.1rem;
                     border-radius: 16px;
                     border: 1px solid rgba(255, 255, 255, 0.15);
-                    background: rgba(0, 0, 0, 0.2); /* 입력창은 약간 어둡게 */
+                    background: rgba(0, 0, 0, 0.2); 
                     color: white;
                     resize: vertical;
                     font-family: inherit;
@@ -469,42 +469,64 @@ const DiaryPage: React.FC = () => {
                 @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
                 @keyframes floatUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 
-                /* 📱 Mobile Responsive (완벽한 모바일 뷰) */
+                /* 📱 Mobile Responsive (배경 가시성 극대화 수정) */
                 @media (max-width: 768px) {
                     .diary-overlay {
                         padding: 15px;
-                        align-items: flex-start; /* 스크롤을 위해 위쪽 정렬 */
+                        /* 중앙 정렬로 다시 맞춰서 배경 여백 확보 */
+                        align-items: center; 
                     }
 
                     .glass-card {
-                        padding: 25px 20px;
-                        margin-top: 10px;
-                        margin-bottom: 40px; /* 하단 스크롤 여유 공간 */
+                        /* 배경 투명도 대폭 낮춤 (0.55 -> 0.25) */
+                        background: rgba(10, 15, 30, 0.25); 
+                        
+                        /* 블러 줄임 (12px -> 4px) : 뒤의 눈/별 모양이 보이도록 */
+                        backdrop-filter: blur(4px); 
+                        -webkit-backdrop-filter: blur(4px);
+                        
+                        /* 테두리는 선명하게 */
+                        border: 1px solid rgba(255, 255, 255, 0.25);
+                        
+                        /* 화면을 꽉 채우지 않고 여백을 둠 */
+                        width: 95%; 
+                        padding: 25px 15px;
+                        margin-top: 20px;
+                        margin-bottom: 40px;
                         border-radius: 20px;
-                        background: rgba(10, 15, 30, 0.55); /* 모바일은 가독성 위해 약간 더 진하게 */
                     }
 
-                    .main-title { font-size: 2.2rem; margin-bottom: 20px; }
-                    .step-title { font-size: 1.4rem; margin-bottom: 20px; }
+                    /* 텍스트 가독성을 위해 그림자 강화 (배경이 밝을 때 대비) */
+                    .main-title { 
+                        font-size: 2.2rem; 
+                        margin-bottom: 20px; 
+                        text-shadow: 0 0 10px rgba(0,0,0, 0.8);
+                    }
+                    .step-title { 
+                        font-size: 1.4rem; 
+                        margin-bottom: 20px; 
+                        text-shadow: 0 2px 5px rgba(0,0,0, 0.8);
+                    }
 
-                    /* 날씨 버튼: 2열 그리드 */
+                    /* 버튼 배경도 투명하게 */
                     .selection-btn {
                         width: 44%; 
                         height: 120px;
                         padding: 15px;
                         gap: 8px;
+                        background: rgba(255, 255, 255, 0.05); /* 버튼도 아주 옅게 */
                     }
                     .btn-icon { font-size: 2.5rem; }
                     .btn-desc { font-size: 1rem; }
 
-                    /* 입력창 높이 조정 */
+                    /* 입력창도 투명하게 */
                     .glass-input {
                         min-height: 200px;
                         font-size: 1rem;
                         padding: 15px;
+                        background: rgba(0, 0, 0, 0.15); /* 뒤가 비치는 검은색 */
                     }
 
-                    /* 버튼 세로 배치 */
                     .control-row {
                         flex-direction: column;
                         width: 100%;
