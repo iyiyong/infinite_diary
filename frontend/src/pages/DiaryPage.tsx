@@ -469,62 +469,71 @@ const DiaryPage: React.FC = () => {
                 @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
                 @keyframes floatUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 
-                /* 📱 Mobile Responsive (배경 가시성 극대화 수정) */
+                /* 📱 Mobile Responsive (제목 잘림 해결 + 배경 투명도 최적화) */
                 @media (max-width: 768px) {
+                    .diary-page-wrapper {
+                        height: 100vh; /* 모바일 브라우저 높이 이슈 대응 */
+                        height: 100dvh; /* 최신 브라우저 대응 */
+                    }
+
                     .diary-overlay {
-                        padding: 15px;
-                        /* 중앙 정렬로 다시 맞춰서 배경 여백 확보 */
-                        align-items: center; 
+                        /* 🚨 핵심 수정: 중앙 정렬(center)을 풉니다. */
+                        align-items: flex-start; 
+                        
+                        /* 위쪽에 충분한 여백을 줘서 제목이 절대 안 잘리게 함 */
+                        padding-top: 80px; 
+                        padding-bottom: 50px;
+                        padding-left: 15px;
+                        padding-right: 15px;
                     }
 
                     .glass-card {
-                        /* 배경 투명도 대폭 낮춤 (0.55 -> 0.25) */
-                        background: rgba(10, 15, 30, 0.25); 
-                        
-                        /* 블러 줄임 (12px -> 4px) : 뒤의 눈/별 모양이 보이도록 */
-                        backdrop-filter: blur(4px); 
-                        -webkit-backdrop-filter: blur(4px);
-                        
-                        /* 테두리는 선명하게 */
+                        /* 배경 투명하게 유지 */
+                        background: rgba(10, 15, 30, 0.35); 
+                        backdrop-filter: blur(5px);
+                        -webkit-backdrop-filter: blur(5px);
                         border: 1px solid rgba(255, 255, 255, 0.25);
                         
-                        /* 화면을 꽉 채우지 않고 여백을 둠 */
-                        width: 95%; 
-                        padding: 25px 15px;
-                        margin-top: 20px;
-                        margin-bottom: 40px;
-                        border-radius: 20px;
+                        /* 마진 초기화 (위쪽 여백은 overlay padding으로 조절) */
+                        margin-top: 0;
+                        margin-bottom: 20px;
+                        
+                        width: 100%; 
+                        border-radius: 24px;
+                        padding: 25px 20px;
                     }
 
-                    /* 텍스트 가독성을 위해 그림자 강화 (배경이 밝을 때 대비) */
                     .main-title { 
-                        font-size: 2.2rem; 
-                        margin-bottom: 20px; 
+                        font-size: 2rem; 
+                        /* 제목 위쪽 여백을 조금 줄여서 공간 확보 */
+                        margin-bottom: 15px; 
+                        margin-top: -10px;
                         text-shadow: 0 0 10px rgba(0,0,0, 0.8);
                     }
+                    
                     .step-title { 
-                        font-size: 1.4rem; 
+                        font-size: 1.3rem; 
                         margin-bottom: 20px; 
                         text-shadow: 0 2px 5px rgba(0,0,0, 0.8);
                     }
 
-                    /* 버튼 배경도 투명하게 */
+                    /* 버튼들 */
                     .selection-btn {
                         width: 44%; 
-                        height: 120px;
-                        padding: 15px;
-                        gap: 8px;
-                        background: rgba(255, 255, 255, 0.05); /* 버튼도 아주 옅게 */
+                        height: 110px;
+                        padding: 10px;
+                        gap: 5px;
+                        background: rgba(255, 255, 255, 0.08);
                     }
-                    .btn-icon { font-size: 2.5rem; }
-                    .btn-desc { font-size: 1rem; }
+                    .btn-icon { font-size: 2.2rem; }
+                    .btn-desc { font-size: 0.9rem; }
 
-                    /* 입력창도 투명하게 */
+                    /* 입력창 */
                     .glass-input {
-                        min-height: 200px;
+                        min-height: 180px; 
                         font-size: 1rem;
                         padding: 15px;
-                        background: rgba(0, 0, 0, 0.15); /* 뒤가 비치는 검은색 */
+                        background: rgba(0, 0, 0, 0.2); 
                     }
 
                     .control-row {
@@ -532,13 +541,14 @@ const DiaryPage: React.FC = () => {
                         width: 100%;
                         gap: 12px;
                     }
-                    .action-btn { width: 100%; padding: 16px; font-size: 1.1rem; }
+                    .action-btn { width: 100%; padding: 15px; font-size: 1.1rem; }
 
                     .footer-nav {
                         flex-direction: column;
-                        gap: 12px;
+                        gap: 10px;
+                        margin-top: 20px;
                     }
-                    .nav-btn { width: 100%; padding: 14px; }
+                    .nav-btn { width: 100%; padding: 12px; }
                 }
             `}</style>
         </div>
