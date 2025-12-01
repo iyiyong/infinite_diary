@@ -63,6 +63,8 @@ router.post('/login', async (req, res) => {
         }
 
         // 토큰 생성
+        console.log(`[Token Gen] ${userId} 토큰 생성 중...`); // 👈 강제 업데이트용 로그 추가
+        
         const token = jwt.sign(
             { userId: user._id, displayName: user.displayName }, 
             process.env.JWT_SECRET,
@@ -79,11 +81,12 @@ router.post('/login', async (req, res) => {
         });
 
         console.log(`--- LOGIN SUCCESS: ${userId} ---`);
-        
+        console.log(`[Debug] 응답에 토큰 포함: ${token ? 'YES' : 'NO'}`); // 👈 디버깅용 로그
+
         // 🚨 [핵심] JSON 응답에 토큰을 반드시 포함해야 합니다!
         res.status(200).json({
             message: '로그인 성공!',
-            token: token,  // 👈 이 줄이 없으면 프론트엔드가 토큰을 못 받아서 에러가 납니다.
+            token: token,  // 👈 이 줄이 없으면 절대 안 됩니다!
             displayName: user.displayName,
             userId: user.userId
         });
