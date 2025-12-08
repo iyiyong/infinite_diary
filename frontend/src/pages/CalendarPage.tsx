@@ -1,9 +1,15 @@
 /// <reference types="vite/client" />
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
 
-// ... (감정 상수 및 EmotionOption 부분은 기존과 동일하므로 유지) ...
-// ... (StarsBackground 컴포넌트도 기존 유지) ...
+// ----------------------------------------------------------------------
+// 🚨 [수정 1] 배포용 백엔드 주소로 고정 (하드코딩)
+// ----------------------------------------------------------------------
+const API_URL = 'https://infinite-diary-server.onrender.com';
+
+// ----------------------------------------------------------------------
+// 1. 감정 상수 및 스타일 정의
+// ----------------------------------------------------------------------
 
 interface GemStyleProps {
     mainColor: string;
@@ -89,10 +95,6 @@ const emotionOptions: EmotionOption[] = [
     },
 ];
 
-// ... (유틸리티 및 API 설정 기존 유지) ...
-
-const API_URL = 'http://localhost:5000';
-
 const weatherIcons: { [key: string]: string } = {
   sunny: '☀️', cloudy: '☁️', rain: '🌧️', snow: '❄️'
 };
@@ -129,7 +131,9 @@ interface DiaryEntry {
   updatedAt: string;
 }
 
-// ... (StarsBackground 컴포넌트 기존 유지) ...
+// ----------------------------------------------------------------------
+// 3. 배경 효과
+// ----------------------------------------------------------------------
 const StarsBackground = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const requestRef = useRef<number>(0);
@@ -273,7 +277,9 @@ const StarsBackground = () => {
   return <canvas ref={canvasRef} className="background-canvas" />;
 };
 
-// ... (CustomCalendar 컴포넌트 기존 유지) ...
+// ----------------------------------------------------------------------
+// 4. 커스텀 달력 컴포넌트
+// ----------------------------------------------------------------------
 const CustomCalendar = ({ 
   currentDate, 
   selectedDate, 
@@ -516,7 +522,8 @@ const CalendarPage: React.FC = () => {
         <div className="calendar-card glass-card">
           
           <div className="header-row">
-            <h1 className="page-title">🗓️ 기록된 우주</h1>
+            {/* 🚨 [수정 2] 타이틀에서 달력 이모티콘 제거 */}
+            <h1 className="page-title">기록된 우주</h1>
             <button onClick={() => handleNavigate('/diary')} className="icon-btn" title="일기 쓰기">
               <span>✏️</span>
             </button>
@@ -650,14 +657,18 @@ const CalendarPage: React.FC = () => {
           min-height: 100%;
         }
 
-        /* --- Deep Space Glass Card --- */
+        /* --- Deep Space Glass Card (투명도 대폭 수정) --- */
         .glass-card {
-          background: rgba(10, 10, 15, 0.6); 
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
+          /* 🚨 [수정 3] 배경을 아주 투명하게 하여 별들이 잘 보이게 함 */
+          background: rgba(10, 10, 15, 0.25); 
+          
+          /* 블러 효과도 살짝 줄여서 뒤가 더 선명하게 */
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          
           border-radius: 28px;
           border: 1px solid rgba(255, 255, 255, 0.08); 
-          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
           width: 100%;
           max-width: 500px; 
           padding: 25px;
@@ -832,7 +843,7 @@ const CalendarPage: React.FC = () => {
         .emotion-dot { width: 6px; height: 6px; border-radius: 50%; }
         .weather-icon-small { display: none; } 
 
-        /* --- Detail Section (가독성 개선) --- */
+        /* --- Detail Section (가독성 유지 + 배경 투명도와 대비) --- */
         .detail-section {
           margin-top: 15px; padding-top: 20px;
           border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -840,9 +851,9 @@ const CalendarPage: React.FC = () => {
         }
 
         .detail-date {
-          color: #E0C3FC; /* 날짜 색상 강조 */
+          color: #E0C3FC; 
           margin-bottom: 20px;
-          font-size: 1.3rem; /* 날짜 크기 확대 */
+          font-size: 1.3rem;
           text-align: center; font-weight: 700;
           opacity: 1;
           letter-spacing: 1px;
@@ -850,12 +861,12 @@ const CalendarPage: React.FC = () => {
         }
 
         .glass-inner-card {
-          /* 배경을 더 어둡게 하여 글씨 가독성 향상 */
-          background: rgba(0, 0, 0, 0.6); 
+          /* 🚨 [수정 4] 안쪽 카드는 진하게 해서 글씨가 잘 보이도록 유지 */
+          background: rgba(0, 0, 0, 0.7); 
           padding: 25px; border-radius: 20px;
-          border: 1px solid rgba(255, 255, 255, 0.15); /* 테두리 조금 더 밝게 */
+          border: 1px solid rgba(255, 255, 255, 0.15); 
           margin-bottom: 20px;
-          box-shadow: inset 0 0 20px rgba(0,0,0,0.5); /* 안쪽 그림자로 깊이감 */
+          box-shadow: inset 0 0 20px rgba(0,0,0,0.5); 
         }
 
         .entry-header {
@@ -868,7 +879,7 @@ const CalendarPage: React.FC = () => {
 
         .glass-badge {
           padding: 6px 14px;
-          background: rgba(255, 255, 255, 0.08); /* 뱃지 배경 살짝 밝게 */
+          background: rgba(255, 255, 255, 0.08); 
           border-radius: 20px;
           font-size: 0.9rem; font-weight: 600;
           border: 1px solid rgba(255, 255, 255, 0.1);
@@ -876,18 +887,18 @@ const CalendarPage: React.FC = () => {
         }
 
         .text-scroll-area {
-          max-height: 250px; /* 스크롤 영역 조금 더 확보 */
+          max-height: 250px; 
           overflow-y: auto; padding-right: 5px;
         }
         .text-scroll-area::-webkit-scrollbar { width: 4px; }
         .text-scroll-area::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 2px; }
 
         .text {
-          color: #ffffff; /* 순백색 글씨 */
-          line-height: 1.8; /* 줄 간격 넓힘 */
+          color: #ffffff; 
+          line-height: 1.8; 
           white-space: pre-wrap; 
-          font-size: 1.05rem; /* 글씨 크기 키움 */
-          font-weight: 400; /* 글씨 두께 두껍게 (300 -> 400) */
+          font-size: 1.05rem; 
+          font-weight: 400; 
           letter-spacing: 0.3px;
         }
 
@@ -946,14 +957,14 @@ const CalendarPage: React.FC = () => {
         @media (max-width: 600px) {
           .calendar-content-container { 
             padding: 15px; 
-            padding-bottom: 90px; /* Space for bottom nav if exists */
+            padding-bottom: 90px; 
           }
           .glass-card { 
             padding: 25px 15px; 
             border-radius: 24px;
           }
           .page-title { font-size: 1.4rem; }
-          .calendar-grid { gap: 4px; } /* Tighter grid on mobile */
+          .calendar-grid { gap: 4px; } 
           .calendar-day { 
             font-size: 0.95rem; 
             border-radius: 10px; 
