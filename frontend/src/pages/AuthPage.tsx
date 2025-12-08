@@ -7,6 +7,12 @@ import BackgroundPlane from '../components/weather/BackgroundPlane';
 
 const LOGIN_BG_PATH = '/images/login_bg.png';
 
+// 🚨 [추가됨] 백엔드 주소 자동 설정 (캘린더 페이지와 동일한 로직)
+const isLocal = window.location.hostname === 'localhost';
+const API_URL = isLocal 
+    ? 'http://localhost:5000' 
+    : 'https://infinite-diary.onrender.com';
+
 const usageText = {
     title: "Infinite Diary",
     subtitle: "규칙",
@@ -40,7 +46,8 @@ const AuthPage: React.FC = () => {
             };
 
             if (!isLogin) {
-                await axios.post(`/api/auth/register`, {
+                // 🚨 [수정됨] 주소 앞에 API_URL 추가
+                await axios.post(`${API_URL}/api/auth/register`, {
                     userId,
                     password,
                     displayName: displayName || 'Diary Keeper', 
@@ -53,7 +60,8 @@ const AuthPage: React.FC = () => {
                 setDisplayName('');
 
             } else {
-                const response = await axios.post(`/api/auth/login`, { 
+                // 🚨 [수정됨] 주소 앞에 API_URL 추가
+                const response = await axios.post(`${API_URL}/api/auth/login`, { 
                     userId, 
                     password 
                 }, axiosConfig);

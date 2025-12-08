@@ -5,15 +5,15 @@ const cors = require('cors');
 const app = express();
 
 // ==========================================
-// 1. 보안 및 CORS 설정 (배포 주소 허용)
+// 1. 보안 및 통신 설정 (CORS)
 // ==========================================
 app.use(cors({
     origin: [
-        'https://infinite-diary-frontend.onrender.com', // 프론트엔드 배포 주소
-        'http://localhost:5173', // 로컬 Vite
-        'http://localhost:3000'  // 로컬 CRA
+        'https://infinite-diary-frontend.onrender.com', // 배포된 프론트엔드 주소
+        'http://localhost:5173', // 로컬 Vite 개발 주소
+        'http://localhost:3000'  // 로컬 React 개발 주소
     ],
-    credentials: true,
+    credentials: true, // 쿠키/토큰 주고받기 허용
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 }));
 
@@ -27,22 +27,26 @@ mongoose.connect(process.env.MONGO_URI)
     .catch(err => console.error('❌ MongoDB Connection Error:', err));
 
 // ==========================================
-// 3. 라우트 설정 (가장 중요한 부분)
+// 3. 라우트 연결 (여기가 제일 중요!!)
 // ==========================================
+
+// (1) 로그인/회원가입 기능 연결
+// 파일명이 routes/auth.js 인지 꼭 확인하세요!
+const authRoutes = require('./routes/auth'); 
+app.use('/api/auth', authRoutes); // -> 주소: /api/auth/login
+
+// (2) 일기 기능 연결
 const diaryRoutes = require('./routes/diaryRoutes');
+app.use('/api/diary', diaryRoutes); // -> 주소: /api/diary/month/...
 
-// 프론트엔드가 '/api/diary'로 요청하므로 여기서도 'diary'로 받습니다.
-app.use('/api/diary', diaryRoutes);
-
-// 서버 상태 확인용 (브라우저에서 백엔드 주소 접속 시 확인 가능)
-app.get('/', (req, res) => {
-    res.send('Infinite Diary Backend is Running! 🚀');
-});
+// 기본 주소 확인용
+app.get('/', (req, res) => res.send('Infinite Diary Backend Running! 🚀'));
 
 // ==========================================
 // 4. 서버 실행
 // ==========================================
-const PORT = process.env.PORT || 8080;
+// 로컬에서는 5000번 포트 강제 사용 (프론트엔드랑 겹치지 않게)
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`🚀 Server is running on port ${PORT}`);
 });

@@ -1,32 +1,31 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs'); // 🚨 중요: bcryptjs 사용 (배포 에러 방지)
 
 const UserSchema = new mongoose.Schema({
-    // 🔑 'email' 필드를 'userId'로 변경
+    // 🔑 로그인 ID
     userId: { 
         type: String,
         required: true,
-        unique: true, // ID는 여전히 중복될 수 없음
+        unique: true, // 중복 ID 방지
         trim: true
     },
+    // 🔒 비밀번호
     password: {
         type: String,
         required: true
     },
+    // 👤 닉네임 (기본값 설정)
     displayName: { 
         type: String,
-        default: 'Diary Keeper'
+        default: '별의 여행자'
     }
 });
-// ... (나머지 password 해시 및 비교 로직은 그대로 유지)
-// ...
 
 // ===========================================
-// 🛡️ 중요: 비밀번호 저장 전 해시(암호화) 처리
+// 🛡️ 비밀번호 암호화 (저장 전 자동 실행)
 // ===========================================
-// 사용자가 비밀번호를 입력하면, DB에 저장되기 전에 이 코드가 실행됩니다.
-// 이로써 DB가 해킹당해도 비밀번호는 안전합니다. (배포 보안 필수)
 UserSchema.pre('save', async function(next) {
+    // 비밀번호가 변경되었을 때만 암호화 (닉네임만 바꿀 때는 실행 안 됨)
     if (this.isModified('password')) {
         const salt = await bcrypt.genSalt(10);
         this.password = await bcrypt.hash(this.password, salt);
@@ -34,9 +33,12 @@ UserSchema.pre('save', async function(next) {
     next();
 });
 
-// 로그인 시 입력된 비밀번호와 DB의 해시된 비밀번호를 비교하는 메서드
-UserSchema.methods.comparePassword = function(candidatePassword) {
-    return bcrypt.compare(candidatePassword, this.password);
+// ===========================================
+// 🔑 비밀번호 비교 메서드 (로그인 시 사용)
+// ===========================================
+UserSchema.methods.comparePassword = async function(candidatePassword) {
+    return await bcrypt.compare(candidatePassword, this.password);
 };
 
+// 모델 이름은 'User'로 내보냅니다.
 module.exports = mongoose.model('User', UserSchema);
