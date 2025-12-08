@@ -3,9 +3,19 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
 
 // ----------------------------------------------------------------------
-// 🚨 [수정 1] 배포용 백엔드 주소로 고정 (하드코딩)
+// 🚨 [수정 1] 환경에 따른 API 주소 자동 설정 (완벽한 수정)
 // ----------------------------------------------------------------------
-const API_URL = 'https://infinite-diary-server.onrender.com';
+// 현재 브라우저 주소창의 호스트 이름을 확인합니다.
+const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+// 로컬이면 localhost:5000을, 아니면 배포된 백엔드 주소를 사용합니다.
+const API_URL = isLocal
+    ? 'http://localhost:5000'                       // 🏠 로컬 개발 환경용
+    : 'https://infinite-diary-server.onrender.com'; // 🚀 배포 환경용
+
+console.log(`Current API URL: ${API_URL} (Environment: ${isLocal ? 'Local' : 'Production'})`);
+// ----------------------------------------------------------------------
+
 
 // ----------------------------------------------------------------------
 // 1. 감정 상수 및 스타일 정의
@@ -522,7 +532,6 @@ const CalendarPage: React.FC = () => {
         <div className="calendar-card glass-card">
           
           <div className="header-row">
-            {/* 🚨 [수정 2] 타이틀에서 달력 이모티콘 제거 */}
             <h1 className="page-title">기록된 우주</h1>
             <button onClick={() => handleNavigate('/diary')} className="icon-btn" title="일기 쓰기">
               <span>✏️</span>
@@ -659,12 +668,12 @@ const CalendarPage: React.FC = () => {
 
         /* --- Deep Space Glass Card (투명도 대폭 수정) --- */
         .glass-card {
-          /* 🚨 [수정 3] 배경을 아주 투명하게 하여 별들이 잘 보이게 함 */
-          background: rgba(10, 10, 15, 0.25); 
+          /* 🚨 [수정 2] 배경을 아주 투명하게 (15%) 설정하여 별들이 잘 보이게 함 */
+          background: rgba(0, 0, 0, 0.15); 
           
           /* 블러 효과도 살짝 줄여서 뒤가 더 선명하게 */
-          backdrop-filter: blur(8px);
-          -webkit-backdrop-filter: blur(8px);
+          backdrop-filter: blur(5px);
+          -webkit-backdrop-filter: blur(5px);
           
           border-radius: 28px;
           border: 1px solid rgba(255, 255, 255, 0.08); 
@@ -861,7 +870,7 @@ const CalendarPage: React.FC = () => {
         }
 
         .glass-inner-card {
-          /* 🚨 [수정 4] 안쪽 카드는 진하게 해서 글씨가 잘 보이도록 유지 */
+          /* 안쪽 카드는 진하게 해서 글씨가 잘 보이도록 유지 */
           background: rgba(0, 0, 0, 0.7); 
           padding: 25px; border-radius: 20px;
           border: 1px solid rgba(255, 255, 255, 0.15); 
