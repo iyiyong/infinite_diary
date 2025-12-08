@@ -1,4 +1,3 @@
-// server.js
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
@@ -6,48 +5,44 @@ const cors = require('cors');
 const app = express();
 
 // ==========================================
-// [중요] 배포 환경에 맞춘 CORS 설정
+// 1. 보안 및 CORS 설정 (배포 주소 허용)
 // ==========================================
-const allowedOrigins = [
-  'https://infinite-diary-frontend.onrender.com', // 프론트엔드 배포 주소
-  'http://localhost:3000', // 로컬 개발용 (테스트 시 필요)
-  'http://localhost:5173'  // Vite 사용 시 로컬 주소 (필요하다면)
-];
-
 app.use(cors({
-  origin: function (origin, callback) {
-    // origin이 없거나(서버끼리 통신) 허용된 리스트에 있으면 통과
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('CORS 정책에 의해 차단되었습니다.'));
-    }
-  },
-  credentials: true // 쿠키/세션 정보 전달 허용
+    origin: [
+        'https://infinite-diary-frontend.onrender.com', // 프론트엔드 배포 주소
+        'http://localhost:5173', // 로컬 Vite
+        'http://localhost:3000'  // 로컬 CRA
+    ],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 }));
 
-app.use(express.json()); // JSON 데이터 파싱
+app.use(express.json());
 
 // ==========================================
-// DB 연결 (MongoDB)
+// 2. 데이터베이스 연결
 // ==========================================
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('MongoDB Connected Successfully'))
-  .catch(err => console.error('MongoDB Connection Error:', err));
-
-
-// ==========================================
-// 라우트 (기존 기능 유지)
-// ==========================================
-// 예시 라우트입니다. 작성하신 diaryRoutes 파일이 있다면 그대로 사용하세요.
-const diaryRoutes = require('./routes/diaryRoutes'); // 경로가 맞는지 확인하세요
-app.use('/api/diaries', diaryRoutes);
-
+    .then(() => console.log('✅ MongoDB Connected Successfully'))
+    .catch(err => console.error('❌ MongoDB Connection Error:', err));
 
 // ==========================================
-// 서버 실행
+// 3. 라우트 설정 (가장 중요한 부분)
 // ==========================================
-const PORT = process.env.PORT || 8080; // Render는 포트를 동적으로 할당하므로 process.env.PORT 필수
+const diaryRoutes = require('./routes/diaryRoutes');
+
+// 프론트엔드가 '/api/diary'로 요청하므로 여기서도 'diary'로 받습니다.
+app.use('/api/diary', diaryRoutes);
+
+// 서버 상태 확인용 (브라우저에서 백엔드 주소 접속 시 확인 가능)
+app.get('/', (req, res) => {
+    res.send('Infinite Diary Backend is Running! 🚀');
+});
+
+// ==========================================
+// 4. 서버 실행
+// ==========================================
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+    console.log(`🚀 Server is running on port ${PORT}`);
 });

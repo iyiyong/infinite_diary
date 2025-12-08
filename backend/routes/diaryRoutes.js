@@ -1,12 +1,39 @@
 const express = require('express');
 const router = express.Router();
-const { protect } = require('../middleware/authMiddleware'); // 인증 미들웨어
-const DiaryEntry = require('../models/DiaryEntry'); // 일기 모델
-const mongoose = require('mongoose'); 
+const mongoose = require('mongoose');
+
+// ===============================================
+// 1. 모델 정의 (파일 경로 에러 방지용 통합)
+// ===============================================
+const diarySchema = new mongoose.Schema({
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    date: { type: Date, required: true },
+    emotion: { type: String, required: true },
+    weather: { type: String, required: true },
+    content: { type: String, required: true },
+}, { timestamps: true });
+
+// 이미 모델이 컴파일되어 있으면 그것을 쓰고, 없으면 새로 만듭니다.
+const DiaryEntry = mongoose.models.DiaryEntry || mongoose.model('DiaryEntry', diarySchema);
+
+// ===============================================
+// 2. 인증 미들웨어 (없을 경우를 대비한 가짜 미들웨어)
+// ===============================================
+// 실제 authMiddleware가 있다면 require로 가져오시고, 
+// 테스트 중이라서 자꾸 에러가 난다면 아래 주석을 풀고 임시로 사용하세요.
+/*
+const protect = (req, res, next) => {
+    // 임시 테스트용 가짜 유저 ID (실제 배포시엔 반드시 주석 처리하고 원래 미들웨어 사용)
+    req.user = { _id: "6578a1b2c3d4e5f6a7b8c9d0" }; 
+    next();
+};
+*/
+// ⚠️ 원래 쓰시던 미들웨어 경로가 맞는지 꼭 확인하세요!
+const { protect } = require('../middleware/authMiddleware'); 
+
 
 // ===============================================
 // POST /api/diary (일기 작성 및 수정)
-// 🔑 기능 변경: 같은 날짜에 기록이 있으면 '수정', 없으면 '새로 작성'
 // ===============================================
 router.post('/', protect, async (req, res) => {
     const { content, emotion, weather, date } = req.body;
@@ -18,41 +45,27 @@ router.post('/', protect, async (req, res) => {
     try {
         const userId = req.user._id;
         
-        // 1. 요청받은 날짜(date)를 기준으로 "그날의 시작"과 "끝"을 계산
-        // 클라이언트에서 보낸 date 문자열을 Date 객체로 변환
+        // 날짜 처리 (UTC 기준 00:00 ~ 23:59)
         const targetDate = new Date(date || Date.now());
-        
-        // 해당 날짜의 00:00:00 ~ 23:59:59 범위를 설정 (UTC 기준)
         const startOfDay = new Date(Date.UTC(targetDate.getUTCFullYear(), targetDate.getUTCMonth(), targetDate.getUTCDate(), 0, 0, 0));
         const endOfDay = new Date(Date.UTC(targetDate.getUTCFullYear(), targetDate.getUTCMonth(), targetDate.getUTCDate() + 1, 0, 0, 0));
 
-        // 2. 이미 오늘 쓴 일기가 있는지 확인 (사용자 ID + 날짜 범위)
+        // 이미 오늘 쓴 일기가 있는지 확인
         const existingEntry = await DiaryEntry.findOne({
             user: userId,
-            date: {
-                $gte: startOfDay,
-                $lt: endOfDay
-            }
+            date: { $gte: startOfDay, $lt: endOfDay }
         });
 
         if (existingEntry) {
-            // 🔄 A. 이미 존재하면 -> 덮어쓰기 (Update)
+            // [수정]
             existingEntry.content = content;
             existingEntry.emotion = emotion;
             existingEntry.weather = weather;
-            existingEntry.date = targetDate; // 시간도 최신으로 업데이트
-
+            existingEntry.date = targetDate; 
             const updatedEntry = await existingEntry.save();
-            
-            console.log(`[Diary Update] ${userId}님의 ${targetDate.toISOString().split('T')[0]} 일기가 수정되었습니다.`);
-            
-            return res.status(200).json({ 
-                message: '오늘의 일기가 수정(덮어쓰기)되었습니다.',
-                entry: updatedEntry 
-            });
-
+            return res.status(200).json({ message: '수정 완료', entry: updatedEntry });
         } else {
-            // 🆕 B. 없으면 -> 새로 만들기 (Create)
+            // [생성]
             const newEntry = new DiaryEntry({
                 user: userId,
                 content,
@@ -60,71 +73,54 @@ router.post('/', protect, async (req, res) => {
                 weather,
                 date: targetDate
             });
-
             const createdEntry = await newEntry.save();
-            
-            console.log(`[Diary Create] ${userId}님의 ${targetDate.toISOString().split('T')[0]} 새 일기가 기록되었습니다.`);
-
-            return res.status(201).json({ 
-                message: '일기가 우주에 성공적으로 기록되었습니다.',
-                entry: createdEntry 
-            });
+            return res.status(201).json({ message: '작성 완료', entry: createdEntry });
         }
-
     } catch (error) {
-        console.error('일기 저장 처리 중 오류 발생:', error);
-        res.status(500).json({ message: '일기 저장에 실패했습니다.' });
+        console.error('일기 저장 실패:', error);
+        res.status(500).json({ message: '서버 에러' });
     }
 });
 
 
 // ===============================================
-// GET /api/diary/month/:year/:month (월별 일기 조회)
+// GET /api/diary/month/:year/:month (월별 조회)
+// 🚨 프론트엔드 호출 주소: /api/diary/month/2025/12
 // ===============================================
 router.get('/month/:year/:month', protect, async (req, res) => {
     try {
         const { year, month } = req.params;
-        
-        let userId;
-        if (mongoose.Types.ObjectId.isValid(req.user._id)) {
-            userId = new mongoose.Types.ObjectId(req.user._id); 
-        } else {
-            return res.status(401).json({ message: '사용자 ID가 유효하지 않습니다.' });
-        }
+        const userId = req.user._id;
 
+        // 해당 월의 1일 00:00:00 (UTC)
         const startDate = new Date(Date.UTC(parseInt(year), parseInt(month) - 1, 1, 0, 0, 0));
+        // 다음 달의 1일 00:00:00 (UTC) -> 해당 월의 끝까지 조회됨
         const endDate = new Date(Date.UTC(parseInt(year), parseInt(month), 1, 0, 0, 0)); 
         
+        console.log(`[조회 요청] User: ${userId}, 기간: ${startDate.toISOString()} ~ ${endDate.toISOString()}`);
+
         const entries = await DiaryEntry.find({
             user: userId, 
-            date: {
-                $gte: startDate, 
-                $lt: endDate     
-            }
+            date: { $gte: startDate, $lt: endDate }
         }).sort({ date: 1 }); 
 
         res.status(200).json(entries);
 
     } catch (error) {
-        console.error(`월별 기록 조회 중 최종 오류 발생 (${req.params.year}-${req.params.month}):`, error);
-        res.status(500).json({ message: '월별 기록 조회에 실패했습니다.' });
+        console.error(`월별 조회 실패:`, error);
+        res.status(500).json({ message: '월별 조회 실패' });
     }
 });
 
-
 // ===============================================
-// GET /api/diary (나의 모든 일기 조회 - 예시용)
+// GET /api/diary (전체 조회)
 // ===============================================
 router.get('/', protect, async (req, res) => {
     try {
-        const entries = await DiaryEntry.find({ user: req.user._id })
-            .sort({ date: -1 }); 
-
+        const entries = await DiaryEntry.find({ user: req.user._id }).sort({ date: -1 });
         res.status(200).json(entries);
-
     } catch (error) {
-        console.error('일기 조회 중 오류 발생:', error);
-        res.status(500).json({ message: '일기 조회에 실패했습니다.' });
+        res.status(500).json({ message: '조회 실패' });
     }
 });
 
