@@ -6,7 +6,7 @@ import moment from 'moment';
 
 // 🔑 절대 경로 임포트 (환경에 맞게 유지)
 import EmotionSelector from '@/components/EmotionSelector';
-import { EmotionOption } from '@/constants/emotions.ts'; 
+import { EmotionOption } from '@/constants/emotions'; 
 
 // 3D 컴포넌트 임포트
 import StarsBackground from '@/components/StarsBackground';
@@ -86,22 +86,22 @@ const DiaryPage: React.FC = () => {
     
     const selectEmotion = (emotionOpt: EmotionOption) => {
         setSelectedEmotion(emotionOpt);
-        setMessage(`✨ 오늘의 감정: ${emotionOpt.description}`);
+        setMessage(`선택된 감정: ${emotionOpt.description}`);
         
         setTimeout(() => {
             setMessage('');
             setStep(3); 
-        }, 1000);
+        }, 800);
     };
 
     const handleSubmitDiary = async () => {
         if (!diaryContent.trim() || !weather || !selectedEmotion) {
-            setMessage('❌ 내용, 감정, 날씨를 모두 입력해야 합니다.');
+            setMessage('내용, 감정, 날씨를 모두 입력해주세요.');
             return;
         }
 
         setIsLoading(true);
-        setMessage('일기를 우주에 기록하는 중...');
+        setMessage('우주에 기록을 전송하는 중...');
         const token = localStorage.getItem('diaryToken');
 
         try {
@@ -120,7 +120,7 @@ const DiaryPage: React.FC = () => {
                 withCredentials: true
             });
 
-            setMessage(`✨ 일기가 우주에 성공적으로 기록되었습니다.`);
+            setMessage(`기록이 완료되었습니다.`);
             setTimeout(() => {
                 navigate('/calendar');
             }, 1500);
@@ -130,11 +130,11 @@ const DiaryPage: React.FC = () => {
             console.error("Diary Save Error:", error);
 
             if (error.response?.status === 401) {
-                setMessage('❌ 세션이 만료되었습니다. 다시 로그인해 주세요.');
+                setMessage('세션이 만료되었습니다. 다시 로그인해 주세요.');
                 setTimeout(handleLogout, 2000);
                 return;
             }
-            setMessage(`❌ 저장 오류: ${error.response?.data?.message || '알 수 없는 오류'}`);
+            setMessage(`저장 실패: ${error.response?.data?.message || '알 수 없는 오류'}`);
         } finally {
             setIsLoading(false);
         }
@@ -144,7 +144,7 @@ const DiaryPage: React.FC = () => {
     
     const renderWeatherSelection = () => (
         <div className="fade-in">
-            <h2 className="step-title">오늘의 날씨는 어땠나요?</h2>
+            <h2 className="step-title">오늘의 날씨</h2>
             <div className="selection-grid">
                 {weatherOptions.map(opt => (
                     <button 
@@ -161,17 +161,19 @@ const DiaryPage: React.FC = () => {
     );
 
     const renderEmotionSelection = () => (
-        <div className="fade-in">
-            <h2 className="step-title">오늘 감정의 보석은?💎</h2>
+        <div className="fade-in emotion-step-container">
+            <h2 className="step-title">오늘의 감정 보석</h2>
             
-            <EmotionSelector 
-                onSelect={selectEmotion}
-                currentEmotionKey={selectedEmotion?.emotionKey || ''} 
-            />
+            <div className="emotion-scroll-wrapper">
+                <EmotionSelector 
+                    onSelect={selectEmotion}
+                    currentEmotionKey={selectedEmotion?.emotionKey || ''} 
+                />
+            </div>
 
             <div className="control-row">
                 <button onClick={() => { setStep(1); setSelectedEmotion(null); setMessage(''); }} className="action-btn secondary glass-btn">
-                    뒤로 (날씨 다시 선택)
+                    이전으로
                 </button>
             </div>
         </div>
@@ -180,17 +182,19 @@ const DiaryPage: React.FC = () => {
     const renderDiaryWriting = () => (
         <div className="fade-in diary-write-container">
             <div className="status-tags">
-                <span className="tag weather-tag">날씨: {weatherOptions.find(o => o.key === weather)?.description}</span>
+                <span className="tag weather-tag">{weatherOptions.find(o => o.key === weather)?.description}</span>
                 <span 
                     className="tag emotion-tag"
                     style={{
                         backgroundColor: selectedEmotion?.gemStyle.mainColor, 
-                        color: '#1a1a1a', 
-                        fontWeight: 'bold',
-                        boxShadow: `0 0 10px ${selectedEmotion?.gemStyle.shadowColor}`
+                        color: '#fff', 
+                        fontWeight: '700',
+                        textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                        boxShadow: `0 4px 15px ${selectedEmotion?.gemStyle.mainColor}55`,
+                        border: `1px solid ${selectedEmotion?.gemStyle.borderColor}`
                     }}
                 >
-                    감정: {selectedEmotion?.description}
+                    {selectedEmotion?.description}
                 </span>
             </div>
             
@@ -199,16 +203,16 @@ const DiaryPage: React.FC = () => {
                 rows={10}
                 value={diaryContent}
                 onChange={(e) => setDiaryContent(e.target.value)}
-                placeholder="오늘의 감정, 생각, 사건을 자유롭게 기록하세요..."
+                placeholder="오늘 하루는 어땠나요? 당신의 우주에 이야기를 남겨보세요."
                 disabled={isLoading}
             />
 
             <div className="control-row">
                 <button onClick={() => { setStep(2); setMessage(''); }} disabled={isLoading} className="action-btn secondary glass-btn">
-                    뒤로
+                    이전
                 </button>
                 <button onClick={handleSubmitDiary} disabled={isLoading || !diaryContent.trim()} className="action-btn primary">
-                    {isLoading ? '저장 중...' : '📝 일기 기록하기'}
+                    {isLoading ? '저장 중...' : '기록하기'}
                 </button>
             </div>
         </div>
@@ -217,15 +221,16 @@ const DiaryPage: React.FC = () => {
     return (
         <div className="diary-page-wrapper">
             
-            {/* Background Canvas: Fixed at z-index 0 */}
+            {/* Background Canvas */}
             <div className="canvas-container">
                 <BackgroundCanvas weather={weather} step={step} />
             </div>
 
-            {/* Scrollable Overlay: z-index 10 */}
+            {/* Scrollable Overlay */}
             <div className="diary-overlay">
                 <div className="diary-card glass-card">
-                    <h1 className="main-title">🌌 Infinite Diary</h1>
+                    {/* ✅ 타이틀이 위쪽 여백 덕분에 잘리지 않고 보입니다 */}
+                    <h1 className="main-title">Infinite Diary</h1>
                     
                     <div className="step-content">
                         {step === 1 && renderWeatherSelection()}
@@ -234,14 +239,15 @@ const DiaryPage: React.FC = () => {
                     </div>
 
                     {message && (
-                        <p className={`message-box ${message.startsWith('❌') ? 'error' : 'success'}`}>
+                        <p className={`message-box ${message.includes('실패') || message.includes('입력') ? 'error' : 'success'}`}>
                             {message}
                         </p>
                     )}
 
                     <div className="footer-nav">
+                        {/* ✅ 버튼 이름 변경: 기록된 별들 */}
                         <button onClick={handleGoToCalendar} disabled={isLoading} className="nav-btn glass-btn">
-                            🗓️ 기록된 우주 보기
+                            기록된 별들
                         </button>
                         <button onClick={handleLogout} disabled={isLoading} className="nav-btn logout glass-btn">
                             로그아웃
@@ -251,17 +257,20 @@ const DiaryPage: React.FC = () => {
             </div>
 
             <style>{`
-                /* --- 레이아웃 & 기본 설정 --- */
+                /* --- 전역 설정 및 폰트 --- */
+                @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
                 .diary-page-wrapper {
                     position: relative;
                     width: 100%;
                     height: 100vh;
-                    overflow: hidden; /* 전체 페이지 스크롤 방지 */
+                    height: 100dvh;
+                    overflow: hidden;
                     font-family: 'Pretendard', sans-serif;
-                    background-color: rgb(10, 10, 20);
+                    background-color: #000000;
                 }
 
-                /* 캔버스를 뒤에 고정 */
+                /* 캔버스 배경 */
                 .canvas-container {
                     position: fixed;
                     top: 0;
@@ -269,6 +278,7 @@ const DiaryPage: React.FC = () => {
                     width: 100%;
                     height: 100%;
                     z-index: 0;
+                    pointer-events: none;
                 }
 
                 .background-canvas {
@@ -276,279 +286,288 @@ const DiaryPage: React.FC = () => {
                     height: 100% !important;
                 }
 
-                /* 스크롤 가능한 오버레이 영역 */
+                /* 메인 오버레이 (수정됨) */
                 .diary-overlay {
                     position: relative;
                     z-index: 10;
                     width: 100%;
                     height: 100%;
-                    overflow-y: auto; /* 내부 스크롤 허용 */
+                    overflow-y: auto;
                     display: flex;
                     justify-content: center;
-                    align-items: center; /* PC에서는 중앙 정렬 */
-                    padding: 20px;
+                    
+                    /* 🔥 핵심 수정: center 대신 flex-start를 써서 위쪽이 잘리지 않게 함 */
+                    align-items: flex-start;
+                    
+                    /* 🔥 핵심 수정: 위쪽 여백을 줘서 타이틀이 천장에 붙지 않게 함 */
+                    padding-top: 80px; 
+                    padding-bottom: 50px;
+                    padding-left: 20px;
+                    padding-right: 20px;
+                    
                     box-sizing: border-box;
-                    -webkit-overflow-scrolling: touch; /* 모바일 부드러운 스크롤 */
+                    -webkit-overflow-scrolling: touch;
                 }
 
-                /* --- Glassmorphism Card (핵심 디자인: PC 기본) --- */
+                /* --- Glass Card 디자인 --- */
                 .glass-card {
-                    background: rgba(15, 20, 35, 0.45); /* PC는 적당한 투명도 */
-                    backdrop-filter: blur(12px); 
-                    -webkit-backdrop-filter: blur(12px);
-                    border: 1px solid rgba(255, 255, 255, 0.15); 
-                    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-                    border-radius: 24px;
-                    padding: 40px;
+                    background: rgba(15, 15, 25, 0.7);
+                    backdrop-filter: blur(25px);
+                    -webkit-backdrop-filter: blur(25px);
+                    border: 1px solid rgba(255, 255, 255, 0.18);
+                    
+                    box-shadow: 
+                        0 15px 40px rgba(0, 0, 0, 0.6),
+                        inset 0 0 20px rgba(255, 255, 255, 0.05);
+                        
+                    border-radius: 45px;
+                    padding: 45px;
                     width: 100%;
-                    max-width: 850px;
-                    color: white;
+                    max-width: 620px;
+                    color: #ffffff;
                     text-align: center;
                     display: flex;
                     flex-direction: column;
-                    gap: 20px;
-                    animation: floatUp 0.8s ease-out;
+                    gap: 25px;
+                    /* margin-top은 padding-top이 있으므로 제거해도 됨 */
                 }
 
                 .main-title {
-                    font-size: 3rem;
-                    text-shadow: 0 0 15px rgba(255, 204, 0, 0.6), 0 0 30px rgba(0, 0, 0, 0.5);
+                    font-size: 2rem;
+                    font-weight: 800;
+                    color: #ffffff;
+                    letter-spacing: 1.5px;
                     margin-bottom: 10px;
-                    color: #ffcc00;
-                    letter-spacing: 2px;
+                    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
                 }
 
                 .step-title {
                     margin-bottom: 30px;
-                    font-size: 2rem;
-                    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+                    font-size: 1.45rem;
+                    color: rgba(255, 255, 255, 0.95);
+                    font-weight: 700;
+                }
+                
+                .step-content {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                }
+
+                /* --- Buttons & Interactions --- */
+                .glass-btn {
+                    background: rgba(255, 255, 255, 0.08);
+                    border: 1px solid rgba(255, 255, 255, 0.15);
+                    backdrop-filter: blur(15px);
+                    color: #ffffff;
+                    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); 
+                    border-radius: 30px;
                     font-weight: 600;
                 }
 
-                /* --- Buttons & Inputs (Glass Style) --- */
-                .glass-btn {
-                    background: rgba(255, 255, 255, 0.05);
-                    border: 1px solid rgba(255, 255, 255, 0.1);
-                    backdrop-filter: blur(4px);
-                    color: white;
-                    transition: all 0.3s ease;
-                }
                 .glass-btn:hover:not(:disabled) {
-                    background: rgba(255, 255, 255, 0.15);
+                    background: rgba(255, 255, 255, 0.2);
                     border-color: rgba(255, 255, 255, 0.4);
-                    transform: translateY(-2px);
-                    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+                    transform: translateY(-3px) scale(1.02);
+                    box-shadow: 0 10px 25px rgba(255, 255, 255, 0.15);
+                }
+
+                .glass-btn:active:not(:disabled) {
+                    transform: scale(0.97);
+                    background: rgba(255, 255, 255, 0.12);
                 }
 
                 .selection-grid {
-                    display: flex;
-                    justify-content: center;
+                    display: grid;
+                    grid-template-columns: repeat(2, 1fr);
                     gap: 15px;
-                    flex-wrap: wrap;
+                    margin-bottom: 15px;
                 }
 
                 .selection-btn {
-                    padding: 20px;
-                    cursor: pointer;
-                    border-radius: 20px;
-                    width: 140px;
-                    height: 140px;
+                    padding: 25px;
+                    height: 130px;
                     display: flex;
                     flex-direction: column;
                     justify-content: center;
                     align-items: center;
-                    gap: 10px;
+                    gap: 12px;
+                    cursor: pointer;
                 }
 
                 .selection-btn.active {
-                    background: rgba(0, 255, 204, 0.15);
-                    border-color: #00ffcc;
-                    box-shadow: 0 0 20px rgba(0, 255, 204, 0.4);
+                    background: rgba(255, 215, 0, 0.15);
+                    border-color: rgba(255, 215, 0, 0.6);
+                    box-shadow: 0 0 35px rgba(255, 215, 0, 0.25);
+                    color: #FFD700;
                 }
 
-                .btn-icon { font-size: 3.5rem; filter: drop-shadow(0 0 5px rgba(0,0,0,0.5)); }
-                .btn-desc { font-size: 1.1rem; color: #ddd; font-weight: 500; }
+                .btn-icon { font-size: 3rem; }
+                .btn-desc { font-size: 1.1rem; font-weight: 600; }
 
-                /* --- Tags & Textarea --- */
+                .emotion-step-container {
+                    display: flex;
+                    flex-direction: column;
+                    width: 100%;
+                }
+                
+                .emotion-scroll-wrapper {
+                    width: 100%;
+                    padding: 5px;
+                }
+
                 .status-tags {
                     display: flex;
                     justify-content: center;
                     gap: 12px;
-                    flex-wrap: wrap;
-                    margin-bottom: 20px;
+                    margin-bottom: 25px;
                 }
 
                 .tag {
-                    padding: 8px 18px;
+                    padding: 10px 22px;
                     border-radius: 50px;
-                    font-size: 1.1rem;
-                    backdrop-filter: blur(5px);
-                    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+                    font-size: 0.95rem;
+                    backdrop-filter: blur(10px);
                 }
-                .weather-tag { background-color: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255,255,255,0.1); }
+                .weather-tag { 
+                    background-color: rgba(255, 255, 255, 0.1); 
+                    border: 1px solid rgba(255, 255, 255, 0.25);
+                }
 
                 .glass-input {
                     width: 100%;
                     padding: 25px;
                     font-size: 1.1rem;
-                    border-radius: 16px;
-                    border: 1px solid rgba(255, 255, 255, 0.15);
-                    background: rgba(0, 0, 0, 0.2); 
+                    border-radius: 35px;
+                    border: 1px solid rgba(255, 255, 255, 0.18);
+                    background: rgba(0, 0, 0, 0.45); 
                     color: white;
-                    resize: vertical;
+                    resize: none;
                     font-family: inherit;
-                    min-height: 240px;
-                    line-height: 1.6;
-                    transition: border-color 0.3s;
+                    min-height: 220px;
+                    line-height: 1.7;
+                    transition: all 0.3s;
                 }
                 .glass-input:focus {
                     outline: none;
-                    border-color: #00BFFF;
-                    background: rgba(0, 0, 0, 0.3);
-                    box-shadow: 0 0 15px rgba(0, 191, 255, 0.2);
+                    border-color: rgba(255, 215, 0, 0.5);
+                    background: rgba(0, 0, 0, 0.6);
+                    box-shadow: 0 0 25px rgba(255, 215, 0, 0.1);
                 }
-                .glass-input::placeholder { color: rgba(255, 255, 255, 0.4); }
+                .glass-input::placeholder { color: rgba(255, 255, 255, 0.35); }
 
-                /* --- Control Buttons --- */
                 .control-row {
                     display: flex;
-                    justify-content: center;
                     gap: 15px;
-                    margin-top: 25px;
+                    margin-top: 35px;
                 }
 
                 .action-btn {
-                    padding: 14px 30px;
+                    flex: 1;
+                    padding: 18px;
                     font-size: 1.1rem;
                     border: none;
-                    border-radius: 12px;
-                    font-weight: bold;
+                    border-radius: 30px;
+                    font-weight: 700;
                     cursor: pointer;
-                    transition: all 0.2s;
-                    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
                 }
                 .action-btn.primary {
-                    background: linear-gradient(135deg, #00BFFF 0%, #0066FF 100%);
-                    color: white;
+                    background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+                    color: #000000;
+                    box-shadow: 0 10px 30px rgba(255, 255, 255, 0.2);
+                    border: 1px solid #ffffff;
                 }
-                .action-btn.primary:hover {
-                    box-shadow: 0 0 20px rgba(0, 191, 255, 0.6);
-                    transform: scale(1.03);
+                .action-btn.primary:hover:not(:disabled) {
+                    transform: translateY(-4px) scale(1.03);
+                    box-shadow: 0 15px 40px rgba(255, 255, 255, 0.3);
+                }
+                .action-btn.secondary {
+                    /* glass-btn 스타일 상속 */
                 }
 
-                /* --- Message & Footer --- */
                 .message-box {
                     margin-top: 20px;
-                    font-weight: bold;
+                    font-size: 0.95rem;
                     padding: 15px;
-                    border-radius: 12px;
-                    backdrop-filter: blur(5px);
+                    border-radius: 20px;
+                    background: rgba(0,0,0,0.4);
+                    backdrop-filter: blur(10px);
+                    border: 1px solid rgba(255,255,255,0.1);
                 }
-                .message-box.success { color: #00ffcc; background: rgba(0, 255, 204, 0.1); border: 1px solid rgba(0,255,204,0.2); }
-                .message-box.error { color: #ff6b6b; background: rgba(255, 107, 107, 0.1); border: 1px solid rgba(255,107,107,0.2); }
+                .message-box.success { color: #4ade80; }
+                .message-box.error { color: #f87171; }
 
                 .footer-nav {
                     margin-top: 40px;
                     display: flex;
                     justify-content: center;
-                    gap: 15px;
-                    padding-top: 20px;
-                    border-top: 1px solid rgba(255, 255, 255, 0.1);
+                    gap: 12px;
+                    padding-top: 25px;
+                    border-top: 1px solid rgba(255, 255, 255, 0.15);
                 }
                 .nav-btn {
-                    padding: 10px 20px;
-                    font-size: 1rem;
-                    border-radius: 10px;
+                    padding: 12px 25px;
+                    font-size: 0.95rem;
+                    border-radius: 25px;
                     cursor: pointer;
-                    font-weight: 600;
+                    background: transparent;
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    color: white; /* 텍스트 색상 명시 */
                 }
-                .nav-btn.logout { color: #ffcc00; border-color: rgba(255, 204, 0, 0.3); }
-                .nav-btn.logout:hover { background: rgba(255, 204, 0, 0.15); }
+                .nav-btn:hover {
+                     background: rgba(255, 255, 255, 0.1);
+                }
+                .nav-btn.logout { 
+                    color: #ff8a8a; 
+                    border-color: rgba(255, 100, 100, 0.3);
+                }
+                .nav-btn.logout:hover {
+                    background: rgba(255, 100, 100, 0.1);
+                }
 
-                .fade-in { animation: fadeIn 0.6s ease-out; }
-                @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-                @keyframes floatUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+                .fade-in { animation: fadeIn 0.5s ease-out; }
+                @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-                /* 📱 Mobile Responsive (제목 잘림 해결 + 배경 투명도 최적화) */
+                /* 📱 Mobile Optimization */
                 @media (max-width: 768px) {
-                    .diary-page-wrapper {
-                        height: 100vh; /* 모바일 브라우저 높이 이슈 대응 */
-                        height: 100dvh; /* 최신 브라우저 대응 */
-                    }
-
                     .diary-overlay {
-                        /* 🚨 핵심 수정: 중앙 정렬(center)을 풉니다. */
-                        align-items: flex-start; 
-                        
-                        /* 위쪽에 충분한 여백을 줘서 제목이 절대 안 잘리게 함 */
+                        align-items: flex-start;
                         padding-top: 80px; 
                         padding-bottom: 50px;
-                        padding-left: 15px;
-                        padding-right: 15px;
+                        padding-left: 20px;
+                        padding-right: 20px;
                     }
 
                     .glass-card {
-                        /* 배경 투명하게 유지 */
-                        background: rgba(10, 15, 30, 0.35); 
-                        backdrop-filter: blur(5px);
-                        -webkit-backdrop-filter: blur(5px);
-                        border: 1px solid rgba(255, 255, 255, 0.25);
-                        
-                        /* 마진 초기화 (위쪽 여백은 overlay padding으로 조절) */
-                        margin-top: 0;
-                        margin-bottom: 20px;
-                        
-                        width: 100%; 
-                        border-radius: 24px;
-                        padding: 25px 20px;
+                        padding: 35px 25px;
+                        border-radius: 40px;
+                        background: rgba(15, 15, 25, 0.8);
+                        height: auto; 
                     }
 
-                    .main-title { 
-                        font-size: 2rem; 
-                        /* 제목 위쪽 여백을 조금 줄여서 공간 확보 */
-                        margin-bottom: 15px; 
-                        margin-top: -10px;
-                        text-shadow: 0 0 10px rgba(0,0,0, 0.8);
-                    }
+                    .main-title { font-size: 1.7rem; }
+                    .step-title { font-size: 1.3rem; }
                     
-                    .step-title { 
-                        font-size: 1.3rem; 
-                        margin-bottom: 20px; 
-                        text-shadow: 0 2px 5px rgba(0,0,0, 0.8);
+                    .emotion-step-container {
+                        max-height: none;
                     }
 
-                    /* 버튼들 */
-                    .selection-btn {
-                        width: 44%; 
-                        height: 110px;
-                        padding: 10px;
-                        gap: 5px;
-                        background: rgba(255, 255, 255, 0.08);
-                    }
-                    .btn-icon { font-size: 2.2rem; }
-                    .btn-desc { font-size: 0.9rem; }
+                    .selection-grid { gap: 12px; }
+                    .selection-btn { height: 115px; padding: 15px; }
+                    .btn-icon { font-size: 2.5rem; }
 
-                    /* 입력창 */
                     .glass-input {
-                        min-height: 180px; 
+                        min-height: 200px;
                         font-size: 1rem;
-                        padding: 15px;
-                        background: rgba(0, 0, 0, 0.2); 
+                        padding: 20px;
                     }
 
-                    .control-row {
-                        flex-direction: column;
-                        width: 100%;
-                        gap: 12px;
-                    }
-                    .action-btn { width: 100%; padding: 15px; font-size: 1.1rem; }
-
-                    .footer-nav {
-                        flex-direction: column;
-                        gap: 10px;
-                        margin-top: 20px;
-                    }
-                    .nav-btn { width: 100%; padding: 12px; }
+                    .control-row { flex-direction: column; gap: 12px; }
+                    .action-btn { width: 100%; padding: 20px; }
+                    
+                    .footer-nav { flex-direction: row; }
+                    .nav-btn { flex: 1; padding: 15px; }
                 }
             `}</style>
         </div>

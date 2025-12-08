@@ -1,87 +1,148 @@
 import React from 'react';
 import styled, { keyframes, css } from 'styled-components';
-// 💡 오류 해결: 값(emotionOptions)과 타입(Interface)을 명확히 분리하여 임포트
 import { emotionOptions } from '../constants/emotions';
 import type { EmotionOption, GemStyleProps } from '../constants/emotions';
 
 // --- SVG 다이아몬드 아이콘 정의 ---
 interface GemIconProps {
-  fillColor: string;
+  index: number; // 💡 수정: 텍스트 키 대신 숫자 인덱스로 색상 강제 지정
+  mainColor: string;
   $isActive: boolean;
 }
 
-// 반짝이는 별 하이라이트
-const StarHighlight = ({ x, y, color }: { x: number, y: number, color: string }) => (
-    <polygon
-      fill={color}
-      points={`${x},${y - 3} ${x + 1.5},${y - 1.5} ${x + 3},${y - 3} ${x + 1.5},${y} ${x + 3},${y + 3} ${x + 1.5},${y + 1.5} ${x},${y + 3} ${x - 1.5},${y + 1.5} ${x - 3},${y + 3} ${x - 1.5},${y} ${x - 3},${y - 3} ${x - 1.5},${y - 1.5}`}
-    />
+// ✨ 반짝이 하이라이트 (날카로운 십자 모양)
+const StarHighlight = ({ x, y, scale = 1, opacity = 1 }: { x: number, y: number, scale?: number, opacity?: number }) => (
+    <g transform={`translate(${x}, ${y}) scale(${scale})`} opacity={opacity}>
+        <polygon
+            fill="white"
+            points="0,-6 1.5,-1.5 6,0 1.5,1.5 0,6 -1.5,1.5 -6,0 -1.5,-1.5"
+        />
+    </g>
 );
 
-const GemIconSVG = styled.svg<GemIconProps>`
-  width: 60px;
-  height: 60px;
-  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); /* 텐션감 있는 애니메이션 */
+const GemIconSVG = styled.svg<{ $fillColor: string; $isActive: boolean }>`
+  width: 65px;
+  height: 65px;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   
-  /* SVG 내부 색상 제어 */
-  color: ${props => props.fillColor}; 
-
-  /* 활성화 시 그림자 효과 강화 (네온 느낌) */
+  /* 활성화 시: 네온 글로우 + 광택 강조 */
   filter: ${props => props.$isActive
-      ? `drop-shadow(0 0 15px ${props.fillColor}) drop-shadow(0 0 5px white)`
-      : `drop-shadow(0 0 2px rgba(255, 255, 255, 0.3))`};
+      ? `drop-shadow(0 0 12px ${props.$fillColor}) drop-shadow(0 0 20px ${props.$fillColor}) brightness(1.2)`
+      : `drop-shadow(0 4px 6px rgba(0,0,0,0.4))`};
   
-  /* 활성화 시 크기 확대 */
+  transform-origin: center center;
   transform: ${props => props.$isActive ? 'scale(1.15) translateY(-5px)' : 'scale(1)'};
-  opacity: ${props => props.$isActive ? 1 : 0.85};
+  opacity: ${props => props.$isActive ? 1 : 0.9};
 
-  /* 📱 모바일 최적화: 아이콘 크기 조정 */
   @media (max-width: 768px) {
-    width: 48px;
-    height: 48px;
+    width: 50px;
+    height: 50px;
   }
 `;
 
-const GemIcon: React.FC<GemIconProps> = (props) => {
+// 🎨 보석별 영롱한 그라데이션 (순서대로 적용됨)
+// 0: 사랑, 1: 즐거움, 2: 슬픔, 3: 화남, 4: 혼란
+const GRADIENTS = [
+    // 0. ❤️ 루비 (Ruby) - 깊은 레드 ~ 핑크
+    (
+        <>
+            <stop offset="0%" stopColor="#5D0016" />
+            <stop offset="50%" stopColor="#D00030" />
+            <stop offset="100%" stopColor="#FF4D6D" />
+        </>
+    ),
+    // 1. 💛 시트린 (Citrine) - 앰버 ~ 골드 옐로우
+    (
+        <>
+            <stop offset="0%" stopColor="#B37400" />
+            <stop offset="50%" stopColor="#FFC300" />
+            <stop offset="100%" stopColor="#FFFF8F" />
+        </>
+    ),
+    // 2. 💙 사파이어 (Sapphire) - 딥 네이비 ~ 오션 블루
+    (
+        <>
+            <stop offset="0%" stopColor="#001233" />
+            <stop offset="50%" stopColor="#0466C8" />
+            <stop offset="100%" stopColor="#48CAE4" />
+        </>
+    ),
+    // 3. 🔥 가넷 (Garnet) - 블랙 레드 ~ 타오르는 오렌지
+    (
+        <>
+            <stop offset="0%" stopColor="#370617" />
+            <stop offset="40%" stopColor="#9D0208" />
+            <stop offset="100%" stopColor="#E85D04" />
+        </>
+    ),
+    // 4. 🦄 오팔 (Opal) - 몽환적인 파스텔
+    (
+        <>
+            <stop offset="10%" stopColor="#A1C4FD" />
+            <stop offset="50%" stopColor="#C2E9FB" />
+            <stop offset="90%" stopColor="#FBC2EB" />
+        </>
+    )
+];
+
+const GemIcon: React.FC<GemIconProps> = ({ index, mainColor, $isActive }) => {
+    // ID 충돌 방지
+    const gradientId = `gem-gradient-${index}`;
+    
+    // 💡 핵심 수정: 인덱스로 그라데이션 선택 (범위를 벗어나면 첫번째 색상 사용)
+    const gradientStops = GRADIENTS[index] || GRADIENTS[0];
+
     return (
-        <GemIconSVG fillColor={props.fillColor} $isActive={props.$isActive} viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <GemIconSVG $fillColor={mainColor} $isActive={$isActive} viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
             <defs>
-                <symbol id="final-gem-icon" viewBox="0 0 100 100">
-                    {/* 보석의 각 면 (Facet) - 투명도를 조절하여 입체감 표현 */}
-                    <polygon className="gem-facet" opacity="0.65" points="50 10, 100 35, 50 100, 0 35" />
-                    <polygon className="gem-facet" opacity="0.75" points="50 100, 75 40, 50 50, 25 40" /> 
-                    <polygon className="gem-facet" opacity="0.85" points="50 100, 75 40, 100 35, 50 50" />
-                    <polygon className="gem-facet" opacity="0.85" points="50 100, 25 40, 0 35, 50 50" />
-                    <polygon className="gem-facet" opacity="0.95" points="50 10, 75 40, 100 35, 50 50" /> 
-                    <polygon className="gem-facet" opacity="0.95" points="50 10, 25 40, 0 35, 50 50" />
-                    <polygon className="gem-facet" opacity="0.98" points="50 10, 50 35, 75 40" />
-                    <polygon className="gem-facet" opacity="0.98" points="50 10, 50 35, 25 40" />
-                </symbol>
+                <linearGradient id={gradientId} x1="20%" y1="0%" x2="80%" y2="100%">
+                    {gradientStops}
+                </linearGradient>
             </defs>
 
-            {/* SVG 내부에서 상위 color 값을 상속받도록 설정 */}
-            <style>
-              {`
-                .gem-facet { fill: currentColor; }
-              `}
-            </style>
-            
-            <use href="#final-gem-icon" />
+            {/* 💎 각지고 반듯한 보석 쉐입 */}
+            <g>
+                {/* 1. 바디 (Main Body) */}
+                <polygon 
+                    points="20,30 80,30 100,45 50,100 0,45" 
+                    fill={`url(#${gradientId})`} 
+                    stroke={mainColor} 
+                    strokeWidth="0.5" 
+                />
+                
+                {/* 2. 파셋 오버레이 (Facet Overlay) - 입체감 형성 */}
+                
+                {/* 상단 테이블 (Table) - 가장 밝게 빛남 */}
+                <polygon points="30,30 70,30 75,40 25,40" fill="white" opacity="0.45" style={{ mixBlendMode: 'overlay' }} />
+                
+                {/* 상단 측면 (Crown) - 은은한 반사 */}
+                <polygon points="20,30 30,30 25,40 0,45" fill="white" opacity="0.3" />
+                <polygon points="70,30 80,30 100,45 75,40" fill="white" opacity="0.3" />
+                
+                {/* 하단 측면 (Pavilion) - 깊은 그림자 */}
+                <polygon points="0,45 25,40 50,100" fill="black" opacity="0.25" style={{ mixBlendMode: 'multiply' }}/>
+                <polygon points="100,45 75,40 50,100" fill="black" opacity="0.25" style={{ mixBlendMode: 'multiply' }}/>
+                
+                {/* 중앙 엣지 하이라이트 */}
+                <polygon points="25,40 75,40 50,100" fill="white" opacity="0.15" style={{ mixBlendMode: 'screen' }} />
+            </g>
 
-            <g opacity={props.$isActive ? 1 : 0.7}>
-                <StarHighlight x={40} y={25} color='white'/>
-                <StarHighlight x={60} y={25} color='white'/>
+            {/* ✨ 반짝이 효과 (각진 느낌에 맞춰 배치) */}
+            <g opacity={$isActive ? 1 : 0.6}>
+                <StarHighlight x={20} y={30} scale={1.2} />
+                <StarHighlight x={80} y={30} scale={0.9} />
+                <StarHighlight x={50} y={95} scale={0.6} opacity={0.8} />
+                {$isActive && <StarHighlight x={35} y={35} scale={0.7} />}
             </g>
         </GemIconSVG>
     );
 };
 
-// --- Styled Components (디자인 및 반응형) ---
+// --- Styled Components (기존 유지) ---
 
-// 선택 시 은은하게 빛나는 애니메이션 (테두리 위주)
 const shimmer = keyframes`
   0% { box-shadow: 0 0 10px var(--shadow-color), inset 0 0 5px var(--shadow-color); border-color: var(--border-color); }
-  50% { box-shadow: 0 0 20px var(--shadow-color), inset 0 0 10px var(--shadow-color); border-color: white; }
+  50% { box-shadow: 0 0 25px var(--shadow-color), inset 0 0 12px var(--shadow-color); border-color: white; }
   100% { box-shadow: 0 0 10px var(--shadow-color), inset 0 0 5px var(--shadow-color); border-color: var(--border-color); }
 `;
 
@@ -95,37 +156,30 @@ const StyledEmotionButton = styled.button<{ $isSelected: boolean; $gemStyle: Gem
   overflow: hidden;
   cursor: pointer;
   
-  /* Layout */
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   gap: 12px;
   
-  /* Size (Desktop) */
   width: 160px;
   height: 170px;
   padding: 15px;
   border-radius: 24px;
   
-  /* 💎 Glassmorphism Style (핵심 수정) */
-  /* 배경을 매우 투명하게 설정하여 뒤의 별이 보이도록 함 */
   background: ${props => props.$isSelected 
     ? 'rgba(255, 255, 255, 0.12)' 
     : 'rgba(255, 255, 255, 0.03)'}; 
   
-  /* 블러 효과로 텍스트 가독성 확보하되, 너무 뿌옇게 하지 않음 */
   backdrop-filter: blur(6px); 
   -webkit-backdrop-filter: blur(6px);
 
-  /* 테두리: 얇고 세련되게 */
   border: 1px solid ${props => props.$isSelected 
     ? 'var(--main-color)' 
     : 'rgba(255, 255, 255, 0.1)'};
   
   color: ${props => props.$isSelected ? 'white' : 'rgba(255, 255, 255, 0.8)'};
   
-  /* 그림자: 선택 안됐을 땐 거의 없게 */
   box-shadow: ${props => props.$isSelected 
     ? '0 8px 32px 0 rgba(0, 0, 0, 0.3)' 
     : 'none'};
@@ -133,7 +187,6 @@ const StyledEmotionButton = styled.button<{ $isSelected: boolean; $gemStyle: Gem
   font-family: inherit;
   transition: all 0.3s ease;
 
-  /* 선택 시 애니메이션 적용 */
   ${props => props.$isSelected && css`
     animation: ${shimmer} 2.5s infinite ease-in-out;
     transform: translateY(-5px);
@@ -145,15 +198,13 @@ const StyledEmotionButton = styled.button<{ $isSelected: boolean; $gemStyle: Gem
     border-color: rgba(255, 255, 255, 0.3);
   }
 
-  /* 📱 모바일 최적화 (Mobile Responsive) */
   @media (max-width: 768px) {
     width: 100%; 
-    height: 140px; /* 높이를 약간 줄여서 화면 효율성 증대 */
+    height: 140px; 
     padding: 10px;
     gap: 8px;
     border-radius: 18px;
     
-    /* 모바일에서는 블러를 조금 더 주어 텍스트 가독성 확보 */
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
   }
@@ -165,7 +216,7 @@ const GemContainer = styled.div`
   justify-content: center;
   align-items: center;
   width: 100%;
-  filter: drop-shadow(0 5px 5px rgba(0,0,0,0.2));
+  filter: drop-shadow(0 8px 10px rgba(0,0,0,0.4));
 `;
 
 const KaomojiStyle = styled.span`
@@ -174,7 +225,6 @@ const KaomojiStyle = styled.span`
   white-space: nowrap;
   color: inherit;
   font-weight: 700;
-  /* 텍스트 그림자로 배경이 밝아도 잘 보이게 */
   text-shadow: 0 2px 4px rgba(0,0,0,0.6);
 
   @media (max-width: 768px) {
@@ -202,16 +252,15 @@ const ButtonGroup = styled.div`
   width: 100%;
   max-width: 900px;
   
-  /* 📱 모바일: 2열 그리드로 꽉 차게 */
   @media (max-width: 768px) {
     display: grid;
-    grid-template-columns: repeat(2, 1fr); /* 2칸씩 배치 */
+    grid-template-columns: repeat(2, 1fr); 
     gap: 12px;
-    padding: 0 5px; /* 양옆 여백 최소화 */
+    padding: 0 5px; 
   }
   
   @media (max-width: 360px) {
-    gap: 8px; /* 아주 작은 화면에선 간격 더 좁게 */
+    gap: 8px; 
   }
 `;
 
@@ -220,9 +269,9 @@ const RomanticQuote = styled.p`
     margin-bottom: 2rem;
     max-width: 650px;
     text-align: center;
-    font-family: serif; /* 명조체 계열 */
+    font-family: serif; 
     font-style: italic;
-    color: #FFD700; /* 골드 */
+    color: #FFD700; 
     text-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
     line-height: 1.6;
     padding: 0 20px;
@@ -242,7 +291,6 @@ interface EmotionSelectorProps {
     currentEmotionKey: string; 
 }
 
-// 3. 메인 감정 선택 컴포넌트
 const EmotionSelector: React.FC<EmotionSelectorProps> = ({ onSelect, currentEmotionKey }) => {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
@@ -253,19 +301,22 @@ const EmotionSelector: React.FC<EmotionSelectorProps> = ({ onSelect, currentEmot
             </RomanticQuote>
             
             <ButtonGroup>
-                {emotionOptions.map(opt => (
+                {emotionOptions.map((opt, index) => (
                     <StyledEmotionButton
                         key={opt.emotionKey}
                         $isSelected={currentEmotionKey === opt.emotionKey}
                         $gemStyle={opt.gemStyle}
                         onClick={() => onSelect(opt)}
                     >
-                        {/* 보석 아이콘 */}
                         <GemContainer>
-                            <GemIcon fillColor={opt.gemStyle.mainColor} $isActive={currentEmotionKey === opt.emotionKey} />
+                            {/* 🚨 수정: 인덱스를 넘겨주어 순서대로 색상이 지정되도록 강제함 */}
+                            <GemIcon 
+                                index={index}
+                                mainColor={opt.gemStyle.mainColor} 
+                                $isActive={currentEmotionKey === opt.emotionKey} 
+                            />
                         </GemContainer>
 
-                        {/* 텍스트 정보 */}
                         <KaomojiStyle>{opt.label}</KaomojiStyle>
                         <DescriptionStyle>{opt.description}</DescriptionStyle>
                     </StyledEmotionButton>
