@@ -57,7 +57,7 @@ const AppContent: React.FC = () => {
                                 원하시는 음악을 틀면 감상도가 올라갑니다
                             </p>
                             <p className="sub-description">
-                                날씨에 따라 변화하는 공간
+                                날씨 선택에 따라 공간이 변화함
                             </p>
                         </div>
 
