@@ -15,7 +15,7 @@ const API_URL = isLocal
 
 const usageText = {
     title: "Infinite Diary",
-    subtitle: "규칙",
+    subtitle: "[ 규칙 ]",
     instructions: [
         "오늘 하루를 천천히 명상하라",
         "회원가입 문자는 자유롭게 사용가능.",

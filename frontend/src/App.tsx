@@ -35,11 +35,11 @@ const AppContent: React.FC = () => {
 
     return (
         <>
-            {/* 1. 시작 화면 (Black Hole & Luxury Concept) */}
+            {/* 1. 시작 화면 */}
             {!audioContextReady && (
                 <div className="initial-screen">
                     
-                    {/* 🕳️ CSS 블랙홀 효과 */}
+                    {/* 🕳️ CSS 블랙홀 효과 (3D Tilted Ring) */}
                     <div className="black-hole-container">
                         <div className="accretion-disk"></div>
                         <div className="event-horizon"></div>
@@ -54,7 +54,7 @@ const AppContent: React.FC = () => {
                         {/* 설명 텍스트 */}
                         <div className="text-group fade-in-delay">
                             <p className="description">
-                                원하시는 음악을 틀면 감상도가 올라갑니다
+                                하루를 기록하면, 작은 성장이 조용히 쌓여간다
                             </p>
                             <p className="sub-description">
                                 날씨에 따라 변화하는 공간
@@ -112,13 +112,13 @@ const App: React.FC = () => (
                 justify-content: center;
                 align-items: center;
                 color: white;
-                perspective: 1000px; /* 3D 효과를 위한 원근감 */
+                perspective: 1200px; /* 3D 효과 강화 */
             }
 
-            /* --- 🕳️ Black Hole Styles --- */
+            /* --- 🕳️ Black Hole Styles (Modified Shape) --- */
             .black-hole-container {
                 position: absolute;
-                top: 50%;
+                top: 45%; /* 텍스트와 겹치지 않게 위치 미세 조정 */
                 left: 50%;
                 transform: translate(-50%, -50%);
                 width: 600px;
@@ -126,49 +126,61 @@ const App: React.FC = () => (
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                z-index: 0; /* 텍스트 뒤로 배치 */
+                z-index: 0;
                 pointer-events: none;
+                /* 3D 공간 설정 */
+                transform-style: preserve-3d;
             }
 
-            /* 빛의 고리 (Accretion Disk) - 회전하는 빛 */
+            /* 빛의 고리 (Accretion Disk) - 기울어진 형태 */
             .accretion-disk {
                 position: absolute;
                 width: 100%;
                 height: 100%;
                 border-radius: 50%;
-                /* 은은한 화이트/실버 그라데이션으로 고급스럽게 */
+                
+                /* 기존 색상 유지 (White/Silver Gradients) */
                 background: conic-gradient(
                     from 0deg, 
                     transparent 0%, 
                     rgba(255, 255, 255, 0.1) 20%, 
-                    rgba(255, 255, 255, 0.8) 50%, 
+                    rgba(255, 255, 255, 0.9) 50%, 
                     rgba(255, 255, 255, 0.1) 80%, 
                     transparent 100%
                 );
-                filter: blur(15px); /* 빛 번짐 효과 */
-                animation: spinDisk 8s linear infinite;
-                opacity: 0.8;
-                box-shadow: 0 0 100px rgba(255, 255, 255, 0.1);
+                
+                /* 🌟 핵심 변경: 디스크를 눕혀서 입체감 부여 */
+                transform: rotateX(75deg); 
+                
+                box-shadow: 0 0 60px rgba(255, 255, 255, 0.15); /* 은은한 발광 */
+                
+                /* 가운데 구멍 뚫기 (도넛 모양 유지하되 눕힘) */
+                -webkit-mask-image: radial-gradient(transparent 55%, black 60%);
+                mask-image: radial-gradient(transparent 55%, black 60%);
+
+                animation: spinDisk 10s linear infinite;
+                opacity: 0.9;
             }
 
-            /* 사건의 지평선 (Event Horizon) - 중앙의 완전한 어둠 */
+            /* 사건의 지평선 (Event Horizon) - 중앙의 검은 구체 */
             .event-horizon {
                 position: absolute;
-                width: 58%; /* 고리보다 작게 */
-                height: 58%;
+                width: 180px; /* 크기 조정 */
+                height: 180px;
                 background-color: #000000;
                 border-radius: 50%;
-                z-index: 1;
-                /* 블랙홀 주변의 빛나는 테두리 */
+                z-index: 10;
+                
+                /* 구체 주변의 미세한 빛 번짐 */
                 box-shadow: 
-                    inset 0 0 40px rgba(255, 255, 255, 0.5), /* 내부 빛 */
-                    0 0 20px rgba(0, 0, 0, 1); /* 외부 그림자 */
+                    0 0 30px rgba(255, 255, 255, 0.3),
+                    inset 0 0 40px rgba(0, 0, 0, 1);
             }
 
+            /* 회전 애니메이션: 눕혀진 상태에서 회전 */
             @keyframes spinDisk {
-                from { transform: rotate(0deg) scale(1); }
-                50% { transform: rotate(180deg) scale(1.05); } /* 숨쉬듯이 살짝 커짐 */
-                to { transform: rotate(360deg) scale(1); }
+                from { transform: rotateX(75deg) rotate(0deg); }
+                to { transform: rotateX(75deg) rotate(360deg); }
             }
 
             /* --- Content Styles --- */
@@ -178,9 +190,9 @@ const App: React.FC = () => (
                 flex-direction: column;
                 align-items: center;
                 gap: 40px;
-                z-index: 10; /* 블랙홀 위에 배치 */
-                /* 텍스트 가독성을 위해 살짝 띄우기 */
+                z-index: 10;
                 text-shadow: 0 4px 20px rgba(0,0,0,0.8); 
+                margin-top: 50px; /* 블랙홀 아래로 컨텐츠 내리기 */
             }
 
             .initial-title {
@@ -189,7 +201,6 @@ const App: React.FC = () => (
                 margin: 0;
                 letter-spacing: -2px;
                 color: #ffffff;
-                /* 타이틀에 은은한 빛 효과 */
                 filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
                 animation: floatTitle 4s ease-in-out infinite alternate;
             }
@@ -240,10 +251,7 @@ const App: React.FC = () => (
                 letter-spacing: 1px;
                 color: white;
                 background: rgba(255, 255, 255, 0.05);
-                
-                /* 귀여운 알약 모양 */
                 border-radius: 100px;
-                
                 border: 1px solid rgba(255, 255, 255, 0.3);
                 backdrop-filter: blur(5px);
                 cursor: pointer;
@@ -255,14 +263,12 @@ const App: React.FC = () => (
                 background: rgba(255, 255, 255, 0.2);
                 border-color: rgba(255, 255, 255, 0.8);
                 transform: scale(1.05);
-                /* 버튼 호버 시 빛이 강해짐 */
                 box-shadow: 
                     0 0 40px rgba(255, 255, 255, 0.4),
                     inset 0 0 20px rgba(255, 255, 255, 0.1);
             }
 
             @media (max-width: 768px) {
-                /* 모바일에서는 블랙홀 크기를 화면에 맞춤 */
                 .black-hole-container { width: 90vw; height: 90vw; }
                 .initial-title { font-size: 3rem; }
                 .description { font-size: 1rem; padding: 0 20px; word-break: keep-all; }
